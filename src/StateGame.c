@@ -2,6 +2,8 @@
 
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
+//#include "..\res\src\wintiles.h"
+#include "..\res\src\winmap.h"
 
 #include "ZGBMain.h"
 #include "Scroll.h"
@@ -22,15 +24,18 @@ void Start_StateGame() {
 	SHOW_SPRITES;
 
     SpriteManagerAdd(SpriteHitEffect, 16,160);
-	scroll_target = SpriteManagerAdd(SpritePlayer, 20, 64);
+    //scroll_target = comment this back in to make the character a scroll target
+	SpriteManagerAdd(SpritePlayer, 20, 64);
 	SpriteManagerAdd(SpriteEnemy, 112, 64);
+	SpriteManagerAdd(SpriteActionCursor, 64, 124);
 	
-
-	InitScrollTiles(0, &tiles);
 	InitScroll(&map, collision_tiles, 0);
+	InitWindow(0,0,&winmap);
+	move_win(8, 120);
 	SHOW_BKG;
-	
-	INIT_CONSOLE(font, 3, 2);
+	SHOW_WIN;
+	InitScrollTiles(0, &tiles);
+	//INIT_CONSOLE(font, 3, 2);
 }
 
 void Update_StateGame() {

@@ -93,8 +93,8 @@ void State_Attack(){
         hitEffectSprite->anim_data = 0;
     }
         
-    DPRINT_POS(0, 0);
-    DPrintf("x:%d y:%d  ", enemySprite->x, enemySprite->y);
+    //DPRINT_POS(0, 0);
+    //DPrintf("x:%d y:%d  ", enemySprite->x, enemySprite->y);
 }
 
 void State_Attack_Post(){
