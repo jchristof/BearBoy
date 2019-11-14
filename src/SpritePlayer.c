@@ -32,6 +32,14 @@ typedef enum {
 
 PlayerState state = Init;
 
+#define BLACK_OUT_BG \
+  BGP_REG	= (3 << 6)|(3 << 4)|(3 << 2)|3;
+
+#define FLASH_BG \
+    BGP_REG	= (2 << 6)|(2 << 4)|(2 << 2)|2;
+
+#define RESTORE_BG \
+    BGP_REG	= (3<< 6)|(2 << 4)|(1 << 2)|0;
 void (*fun_ptr_arr[Attack_Num])(void) = {State_Init, State_Idle, State_Attack_Pre, State_Attack, State_Attack_Post};
 
 void Start_SpritePlayer() {
@@ -61,14 +69,15 @@ void findEnemyPosition(){
 }
 
 void State_Init(){
-    Print();
     findEnemyPosition();
     state = Idle;
 }
 
 void State_Idle(){
-    if(KEY_PRESSED(J_A))
+    if(KEY_PRESSED(J_A)){
         state = Attack_Pre;
+        BLACK_OUT_BG;
+    } 
 }
 
 void State_Attack_Pre(){
@@ -80,6 +89,7 @@ void State_Attack_Pre(){
        hitEffectSprite->x = enemySprite->x;
        hitEffectSprite->y = enemySprite->y;
        SetSpriteAnim(hitEffectSprite, anim_slash, 15);
+       FLASH_BG;
    }
 }
 
@@ -99,6 +109,7 @@ void State_Attack(){
 
 void State_Attack_Post(){
     state = Idle;
+    RESTORE_BG;
 }
 
 void Print(){

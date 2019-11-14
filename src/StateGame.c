@@ -35,7 +35,7 @@ void Start_StateGame() {
 	SHOW_BKG;
 	SHOW_WIN;
 	InitScrollTiles(0, &tiles);
-	//INIT_CONSOLE(font, 3, 2);
+	INIT_CONSOLE(font, 3, 2);
 }
 
 void Update_StateGame() {
