@@ -2,14 +2,14 @@
 
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
-#include "..\res\src\winmap.h"
+#include "../res/src/font.h"
 
 #include "ZGBMain.h"
 #include "Scroll.h"
 #include "SpriteManager.h"
 #include "Keys.h"
 #include "Print.h"
-#include "../res/src/font.h"
+
 #include "Sound.h"
 
 extern UINT8* music_mod_Data[];
@@ -97,6 +97,8 @@ void Start_StateGame()
 	SHOW_SPRITES;
 
 	spriteHitEffect = SpriteManagerAdd(SpriteHitEffect, 16, 160);
+	SPRITE_SET_PALETTE(spriteHitEffect, 1);
+
 	spritePlayer = SpriteManagerAdd(SpritePlayer, 20, 64);
 	spriteEnemy = SpriteManagerAdd(SpriteEnemy, 112, 64);
 
