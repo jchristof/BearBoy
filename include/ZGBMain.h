@@ -12,6 +12,8 @@ _SPRITE_DMG(SpriteHitEffect, slash)\
 _SPRITE_DMG(SpriteButton, pressa)\
 _SPRITE_DMG(SpriteWin, win)\
 _SPRITE_DMG(SpritePlayerAttack, bearAttack)\
+_SPRITE_DMG(SpriteJump, jump)\
+_SPRITE_DMG(SpriteFailed, lose)\
 SPRITE_DEF_END
 
 #include "ZGBMain_Init.h"

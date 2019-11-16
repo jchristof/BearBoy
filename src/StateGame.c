@@ -10,6 +10,9 @@
 #include "Keys.h"
 #include "Print.h"
 #include "../res/src/font.h"
+#include "Sound.h"
+
+extern UINT8* music_mod_Data[];
 
 UINT8 collision_tiles[] = {1, 0};
 
@@ -17,9 +20,12 @@ void State_Init();
 void State_Idle();
 void State_Player_Input();
 void State_Attack_Success();
+void State_Attack_Failed();
+void State_Attack_Failed_Idle();
 void State_Attack_Pre();
 void State_Attack();
 void State_Attack_Post();
+void State_Attack_Reset();
 
 typedef enum
 {
@@ -27,19 +33,42 @@ typedef enum
 	Idle,
 	Player_Input,
 	Attack_Success,
+	Attack_Failed,
+	Attack_Failed_Idle,
 	Attack_Pre,
 	Attack,
 	Attack_Post,
+	Attack_Reset,
 	Attack_Num
-} PlayerState;
+} GameState;
 
-PlayerState state = Init;
+GameState state = Init;
+
+void (*fun_ptr_arr[Attack_Num])(void) = {
+	State_Init, 
+	State_Idle, 
+	State_Player_Input, 
+	State_Attack_Success, 
+	State_Attack_Failed,
+	State_Attack_Failed_Idle,
+	State_Attack_Pre, 
+	State_Attack, 
+	State_Attack_Post,
+	State_Attack_Reset
+	};
+
+struct Sprite *spriteHitEffect = 0;
+struct Sprite *spritePlayer = 0;
+struct Sprite *spriteEnemy = 0;
+struct Sprite *button = 0;
+
+const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
 #define BLACK_OUT_BG \
 	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3
 
 #define FLASH_BG \
-	BGP_REG = (2 << 6) | (2 << 4) | (2 << 2) | 2
+	BGP_REG = (1 << 6) | (1 << 4) | (1 << 2) | 1
 
 #define RESTORE_BG \
 	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
@@ -50,39 +79,34 @@ PlayerState state = Init;
 #define OBJ1_RESTORE_COLOR \
 	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
 
-void (*fun_ptr_arr[Attack_Num])(void) = {State_Init, State_Idle, State_Player_Input, State_Attack_Success, State_Attack_Pre, State_Attack, State_Attack_Post};
-
-struct Sprite *spriteHitEffect = 0;
-struct Sprite *spritePlayer = 0;
-struct Sprite *spriteEnemy = 0;
-struct Sprite *button = 0;
-
-const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
-
 void Start_StateGame()
 {
 	UINT8 i;
 
+	NR52_REG = 0x80; //Enables sound, you should always setup this first
+	NR51_REG = 0xFF; //Enables all channels (left and right)
+	NR50_REG = 0x77; //Max volume
+
 	SPRITES_8x16;
+
 	for (i = 0; i != N_SPRITE_TYPES; ++i)
 	{
 		SpriteManagerLoad(i);
 	}
+
 	SHOW_SPRITES;
 
 	spriteHitEffect = SpriteManagerAdd(SpriteHitEffect, 16, 160);
-	//scroll_target = comment this back in to make the character a scroll target
 	spritePlayer = SpriteManagerAdd(SpritePlayer, 20, 64);
 	spriteEnemy = SpriteManagerAdd(SpriteEnemy, 112, 64);
-	//SpriteManagerAdd(SpriteActionCursor, 64, 124);
 
 	InitScroll(&map, collision_tiles, 0);
-	InitWindow(0, 0, &winmap);
-	//move_win(8, 120);
 	SHOW_BKG;
-	//SHOW_WIN;
+
 	InitScrollTiles(0, &tiles);
 	INIT_CONSOLE(font, 3, 2);
+
+	PlayMusic(music_mod_Data, 3, 1);
 }
 
 void Update_StateGame()
@@ -91,6 +115,7 @@ void Update_StateGame()
 }
 
 #define DELAY_TIME 0x20
+
 UINT8 time = DELAY_TIME;
 
 void State_Init()
@@ -103,15 +128,14 @@ void State_Idle()
 {
 	if (time--)
 		return;
-	//if(KEY_PRESSED(J_A)){
-	//state = Attack_Pre;
+
+	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
 	OBJ1_ATTACK_COLOR;
 	button = SpriteManagerAdd(SpriteButton, 64, 8);
 	SPRITE_SET_PALETTE(button, 1);
 	state = Player_Input;
 	time = DELAY_TIME;
-	// }
 }
 
 void State_Player_Input()
@@ -121,6 +145,7 @@ void State_Player_Input()
 		FLASH_BG;
 		SpriteManagerRemoveSprite(button);
 		button = SpriteManagerAdd(SpriteWin, 64, 8);
+
 		SPRITE_SET_PALETTE(button, 1);
 		state = Attack_Success;
 		time = 0x10;
@@ -129,7 +154,8 @@ void State_Player_Input()
 	{
 		if (time--)
 			return;
-		//state fail
+
+		state = Attack_Failed;
 	}
 }
 
@@ -140,15 +166,31 @@ void State_Attack_Success()
 	BLACK_OUT_BG;
 	state = Attack_Pre;
 	SpriteManagerRemoveSprite(spritePlayer);
-	spritePlayer = SpriteManagerAdd(SpritePlayerAttack, 20, 64);
+	spritePlayer = SpriteManagerAdd(SpriteJump, 20, 64);
+}
+
+void State_Attack_Failed(){
+	SpriteManagerRemoveSprite(button);
+	button = SpriteManagerAdd(SpriteFailed, 64, 8);
+	time = DELAY_TIME;
+	state = Attack_Failed_Idle;
+}
+
+void State_Attack_Failed_Idle(){
+	if(time-- == 0){
+		state = Attack_Reset;
+		spritePlayer->x = 20;
+		return;
+	}
+	if(time %8== 0)
+		spritePlayer->x = 160;
+	else
+		spritePlayer->x = 20;
 }
 
 void State_Attack_Pre()
 {
-	
 	TranslateSprite(spritePlayer, 5, 0);
-	//if(CheckCollision(spritePlayer, spriteEnemy)){
-	//TranslateSprite(spritePlayer, 10, -32);
 
 	if (spritePlayer->x < 160)
 		return;
@@ -158,7 +200,7 @@ void State_Attack_Pre()
 	spriteHitEffect->x = spriteEnemy->x;
 	spriteHitEffect->y = spriteEnemy->y;
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
-	//}
+	PlayFx(CHANNEL_1, 10, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 }
 
 void State_Attack()
@@ -166,6 +208,7 @@ void State_Attack()
 	if (spriteHitEffect->current_frame == 4)
 	{
 		state = Attack_Post;
+		time = DELAY_TIME;
 		spritePlayer->x = 20;
 		spritePlayer->y = 64;
 		spriteHitEffect->y = 160;
@@ -178,6 +221,19 @@ void State_Attack()
 }
 
 void State_Attack_Post()
+{
+	if(time-- == 0){
+		state = Attack_Reset;
+		spriteEnemy->x = 112;
+		return;
+	}
+	if(time %8== 0)
+		spriteEnemy->x = 160;
+	else
+		spriteEnemy->x = 112;
+}
+
+void State_Attack_Reset()
 {
 	state = Idle;
 	RESTORE_BG;
