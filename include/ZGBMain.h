@@ -9,7 +9,9 @@ STATE_DEF_END
 _SPRITE_DMG(SpritePlayer, bear)\
 _SPRITE_DMG(SpriteEnemy, enemy)\
 _SPRITE_DMG(SpriteHitEffect, slash)\
-_SPRITE_DMG(SpriteActionCursor, actioncursor)\
+_SPRITE_DMG(SpriteButton, pressa)\
+_SPRITE_DMG(SpriteWin, win)\
+_SPRITE_DMG(SpritePlayerAttack, bearAttack)\
 SPRITE_DEF_END
 
 #include "ZGBMain_Init.h"
