@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "gb.h": "c"
+        "gb.h": "c",
+        "spritemanager.h": "c",
+        "setbank2.h": "c",
+        "jump.h": "c"
     }
 }

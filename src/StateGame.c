@@ -1,8 +1,14 @@
 #include "Banks/SetBank2.h"
 
+#include "BankManager.h"
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
 #include "../res/src/font.h"
+#include "..\res\src\jump.h"
+#include "..\res\src\bear.h"
+#include "..\res\src\lose.h"
+#include "..\res\src\win.h"
+#include "..\res\src\pressa.h"
 
 #include "ZGBMain.h"
 #include "Scroll.h"
@@ -79,6 +85,14 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 #define OBJ1_RESTORE_COLOR \
 	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
 
+#define HIDE_SPRITE(SPRITE) \
+	SPRITE->x = 160; \
+	SPRITE->y = 144;
+
+#define SHOW_BUTTON(SPRITE) \
+	SPRITE->x = 64; \
+	SPRITE->y = 8;
+
 void Start_StateGame()
 {
 	UINT8 i;
@@ -102,11 +116,16 @@ void Start_StateGame()
 	spritePlayer = SpriteManagerAdd(SpritePlayer, 20, 64);
 	spriteEnemy = SpriteManagerAdd(SpriteEnemy, 112, 64);
 
+	button = SpriteManagerAdd(SpriteButton, 64, 8);
+	HIDE_SPRITE(button)
+
+	SPRITE_SET_PALETTE(button, 1);
+
 	InitScroll(&map, collision_tiles, 0);
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
-	INIT_CONSOLE(font, 3, 2);
+	//INIT_CONSOLE(font, 3, 2);
 
 	PlayMusic(music_mod_Data, 3, 1);
 }
@@ -134,8 +153,8 @@ void State_Idle()
 	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
 	OBJ1_ATTACK_COLOR;
-	button = SpriteManagerAdd(SpriteButton, 64, 8);
-	SPRITE_SET_PALETTE(button, 1);
+	
+	SHOW_BUTTON(button)
 	state = Player_Input;
 	time = DELAY_TIME;
 }
@@ -145,10 +164,8 @@ void State_Player_Input()
 	if (KEY_PRESSED(J_A))
 	{
 		FLASH_BG;
-		SpriteManagerRemoveSprite(button);
-		button = SpriteManagerAdd(SpriteWin, 64, 8);
 
-		SPRITE_SET_PALETTE(button, 1);
+		SpriteManagerLoadTiles(button, win.data, 0);
 		state = Attack_Success;
 		time = 0x10;
 	}
@@ -167,13 +184,11 @@ void State_Attack_Success()
 		return;
 	BLACK_OUT_BG;
 	state = Attack_Pre;
-	SpriteManagerRemoveSprite(spritePlayer);
-	spritePlayer = SpriteManagerAdd(SpriteJump, 20, 64);
+	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 }
 
 void State_Attack_Failed(){
-	SpriteManagerRemoveSprite(button);
-	button = SpriteManagerAdd(SpriteFailed, 64, 8);
+	SpriteManagerLoadTiles(button, lose.data, 0);
 	time = DELAY_TIME;
 	state = Attack_Failed_Idle;
 }
@@ -211,8 +226,6 @@ void State_Attack()
 	{
 		state = Attack_Post;
 		time = DELAY_TIME;
-		spritePlayer->x = 20;
-		spritePlayer->y = 64;
 		spriteHitEffect->y = 160;
 		spriteHitEffect->current_frame = 0;
 		spriteHitEffect->anim_data = 0;
@@ -240,7 +253,10 @@ void State_Attack_Reset()
 	state = Idle;
 	RESTORE_BG;
 	OBJ1_RESTORE_COLOR;
-	SpriteManagerRemoveSprite(button);
-	SpriteManagerRemoveSprite(spritePlayer);
-	spritePlayer = SpriteManagerAdd(SpritePlayer, 20, 64);
+
+	SpriteManagerLoadTiles(button, pressa.data, 0);
+	HIDE_SPRITE(button)
+	SpriteManagerLoadTiles(spritePlayer, bear.data, 0);
+	spritePlayer->x = 20;
+	spritePlayer->y = 64;
 }

@@ -48,10 +48,14 @@ void Start_SpritePlayer() {
 //	THIS->coll_y = 0;
 //	THIS->coll_w = 12;
 //	THIS->coll_h = 16;
+    //spriteDatas[THIS_IDX]->
+  
 }
 
 void Update_SpritePlayer() {
    // (*fun_ptr_arr[state])(); 
+    DPRINT_POS(0, 0);
+    DPrintf("%d", THIS_IDX);
 }
 
 void Destroy_SpritePlayer() {
