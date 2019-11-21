@@ -1,4 +1,5 @@
 #include "Banks/SetBank2.h"
+#include <rand.h>
 
 #include "BankManager.h"
 #include "..\res\src\tiles.h"
@@ -9,6 +10,7 @@
 #include "..\res\src\lose.h"
 #include "..\res\src\win.h"
 #include "..\res\src\pressa.h"
+#include "..\res\src\pressb.h"
 
 #include "ZGBMain.h"
 #include "Scroll.h"
@@ -24,7 +26,10 @@ UINT8 collision_tiles[] = {1, 0};
 
 void State_Init();
 void State_Idle();
-void State_Player_Input();
+void State_Player_Input_Attack();
+void State_Player_Defend();
+void State_Player_Defend_Success();
+void State_Player_Defend_Fail();
 void State_Attack_Success();
 void State_Attack_Failed();
 void State_Attack_Failed_Idle();
@@ -37,7 +42,10 @@ typedef enum
 {
 	Init,
 	Idle,
-	Player_Input,
+	Player_Input_Attack,
+	Player_Defend,
+	Player_Defend_Success,
+	Player_Defend_Fail,
 	Attack_Success,
 	Attack_Failed,
 	Attack_Failed_Idle,
@@ -53,7 +61,10 @@ GameState state = Init;
 void (*fun_ptr_arr[Attack_Num])(void) = {
 	State_Init, 
 	State_Idle, 
-	State_Player_Input, 
+	State_Player_Input_Attack,
+	State_Player_Defend,
+	State_Player_Defend_Success,
+	State_Player_Defend_Fail,
 	State_Attack_Success, 
 	State_Attack_Failed,
 	State_Attack_Failed_Idle,
@@ -93,6 +104,15 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 	SPRITE->x = 64; \
 	SPRITE->y = 8;
 
+void UpdateBearHP();
+void UpdateEnemyHP();
+
+UINT8 bearHP = 56;
+UINT8 enemyHP = 56;
+
+//nine bg tiles representing the healthbar
+UINT8 healthBarTiles[9] = {23,24,25,26,27,28,29,30,31};
+
 void Start_StateGame()
 {
 	UINT8 i;
@@ -102,6 +122,7 @@ void Start_StateGame()
 	NR50_REG = 0x77; //Max volume
 
 	SPRITES_8x16;
+	initrand(DIV_REG);
 
 	for (i = 0; i != N_SPRITE_TYPES; ++i)
 	{
@@ -127,7 +148,10 @@ void Start_StateGame()
 	InitScrollTiles(0, &tiles);
 	//INIT_CONSOLE(font, 3, 2);
 
-	PlayMusic(music_mod_Data, 3, 1);
+	//PlayMusic(music_mod_Data, 3, 1);
+
+	UpdateBearHP();
+	UpdateEnemyHP();
 }
 
 void Update_StateGame()
@@ -147,24 +171,64 @@ void State_Init()
 
 void State_Idle()
 {
-	if (time--)
-		return;
+	if (time--){
 
+		if(KEY_PRESSED(J_A) || KEY_PRESSED(J_B)){
+			time = DELAY_TIME;
+			state = Attack_Failed;
+			PlayFx(CHANNEL_1,10, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
+		}
+		return;
+	}
+		
 	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
 	OBJ1_ATTACK_COLOR;
+
+	if(rand() % 2){
+		SHOW_BUTTON(button)
+		SpriteManagerLoadTiles(button, pressa.data, 0);
+		state = Player_Input_Attack;
+	}
+	else{
+		SHOW_BUTTON(button)
+		SpriteManagerLoadTiles(button, pressb.data, 0);
+		state = Player_Defend;
+	}
 	
-	SHOW_BUTTON(button)
-	state = Player_Input;
 	time = DELAY_TIME;
 }
 
-void State_Player_Input()
+void State_Player_Defend(){
+	TranslateSprite(spriteEnemy, -5, 0);
+	if(spriteEnemy->x > spritePlayer->x){
+		if(KEY_PRESSED(J_B))
+			state = Player_Defend_Success;
+	}
+	else
+		state = Player_Defend_Fail;
+}
+
+void State_Player_Defend_Success(){
+	state = Attack_Reset;
+}
+
+void State_Player_Defend_Fail(){
+	TranslateSprite(spriteEnemy, -5, 0);
+	spriteHitEffect->x = spritePlayer->x;
+	spriteHitEffect->y = spritePlayer->y;
+	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
+	PlayFx(CHANNEL_1, 10, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+
+	state = Attack_Failed;
+}
+
+void State_Player_Input_Attack()
 {
 	if (KEY_PRESSED(J_A))
 	{
 		FLASH_BG;
-
+		SHOW_BUTTON(button)
 		SpriteManagerLoadTiles(button, win.data, 0);
 		state = Attack_Success;
 		time = 0x10;
@@ -188,6 +252,9 @@ void State_Attack_Success()
 }
 
 void State_Attack_Failed(){
+	bearHP > 0 ? bearHP-- : bearHP;
+	UpdateBearHP();
+	SHOW_BUTTON(button)
 	SpriteManagerLoadTiles(button, lose.data, 0);
 	time = DELAY_TIME;
 	state = Attack_Failed_Idle;
@@ -226,9 +293,9 @@ void State_Attack()
 	{
 		state = Attack_Post;
 		time = DELAY_TIME;
-		spriteHitEffect->y = 160;
-		spriteHitEffect->current_frame = 0;
-		spriteHitEffect->anim_data = 0;
+
+		enemyHP--;
+		UpdateEnemyHP();
 	}
 
 	//DPRINT_POS(0, 0);
@@ -259,4 +326,49 @@ void State_Attack_Reset()
 	SpriteManagerLoadTiles(spritePlayer, bear.data, 0);
 	spritePlayer->x = 20;
 	spritePlayer->y = 64;
+
+	spriteEnemy->x = 112;
+	spriteEnemy->y = 64;
+}
+
+void UpdateBearHP(){
+	UINT8 wholeTiles = bearHP / 8;
+	UINT8 partialTileValue = bearHP % 8;
+	UINT8 index = 0;
+
+	for(index = 0; index < wholeTiles; index++){
+		set_bkg_tiles(1 + index,0,1,1, &healthBarTiles[8]);
+	}
+
+	for(; index < 7;){
+		set_bkg_tiles(1 + index,0,1,1,&healthBarTiles[partialTileValue]);
+		index++;
+		break;
+	}
+
+	for(; index < 7; index++){
+		set_bkg_tiles(1 + index,0,1,1,&healthBarTiles[0]);
+		break;
+	}
+}
+
+void UpdateEnemyHP(){
+	UINT8 wholeTiles = enemyHP / 8;
+	UINT8 partialTileValue = enemyHP % 8;
+	UINT8 index = 0;
+
+	for(index = 0; index < wholeTiles; index++){
+		set_bkg_tiles(12 + index,0,1,1, &healthBarTiles[8]);
+	}
+
+	for(; index < 7;){
+		set_bkg_tiles(12 + index,0,1,1,&healthBarTiles[partialTileValue]);
+		index++;
+		break;
+	}
+
+	for(; index < 7; index++){
+		set_bkg_tiles(12 + index,0,1,1,&healthBarTiles[0]);
+		break;
+	}
 }
