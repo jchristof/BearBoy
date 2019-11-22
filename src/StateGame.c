@@ -11,6 +11,9 @@
 #include "..\res\src\win.h"
 #include "..\res\src\pressa.h"
 #include "..\res\src\pressb.h"
+#include "..\res\src\enemy.h"
+#include "..\res\src\enemy_attack_mode.h"
+#include "..\res\src\bear_attack_mode.h"
 
 #include "ZGBMain.h"
 #include "Scroll.h"
@@ -91,7 +94,7 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
 
 #define OBJ1_ATTACK_COLOR \
-	OBP0_REG = (2 << 6) | (2 << 4) | (3 << 2) | 3
+	OBP0_REG = (1 << 6) | (1 << 4) | (2 << 2) | 2
 
 #define OBJ1_RESTORE_COLOR \
 	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
@@ -116,13 +119,6 @@ UINT8 healthBarTiles[9] = {23,24,25,26,27,28,29,30,31};
 void Start_StateGame()
 {
 	UINT8 i;
-
-	NR52_REG = 0x80; //Enables sound, you should always setup this first
-	NR51_REG = 0xFF; //Enables all channels (left and right)
-	NR50_REG = 0x77; //Max volume
-
-	SPRITES_8x16;
-	initrand(DIV_REG);
 
 	for (i = 0; i != N_SPRITE_TYPES; ++i)
 	{
@@ -183,7 +179,9 @@ void State_Idle()
 		
 	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
-	OBJ1_ATTACK_COLOR;
+	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
+	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
+	//OBJ1_ATTACK_COLOR;
 
 	if(rand() % 2){
 		SHOW_BUTTON(button)
@@ -248,6 +246,7 @@ void State_Attack_Success()
 		return;
 	BLACK_OUT_BG;
 	state = Attack_Pre;
+	
 	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 }
 
@@ -324,6 +323,7 @@ void State_Attack_Reset()
 	SpriteManagerLoadTiles(button, pressa.data, 0);
 	HIDE_SPRITE(button)
 	SpriteManagerLoadTiles(spritePlayer, bear.data, 0);
+	SpriteManagerLoadTiles(spriteEnemy, enemy.data, 0);
 	spritePlayer->x = 20;
 	spritePlayer->y = 64;
 
@@ -340,9 +340,9 @@ void UpdateBearHP(){
 		set_bkg_tiles(1 + index,0,1,1, &healthBarTiles[8]);
 	}
 
-	for(; index < 7;){
+	for(; index < 7;index++){
 		set_bkg_tiles(1 + index,0,1,1,&healthBarTiles[partialTileValue]);
-		index++;
+		
 		break;
 	}
 
