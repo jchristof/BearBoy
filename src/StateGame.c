@@ -181,7 +181,6 @@ void State_Idle()
 	BLACK_OUT_BG;
 	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
-	//OBJ1_ATTACK_COLOR;
 
 	if(rand() % 2){
 		SHOW_BUTTON(button)
