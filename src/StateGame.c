@@ -4,7 +4,8 @@
 #include "BankManager.h"
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
-#include "../res/src/font.h"
+#include "..\res\src\font.h"
+#include "..\res\src\pause.h"
 #include "..\res\src\jump.h"
 #include "..\res\src\bear.h"
 #include "..\res\src\lose.h"
@@ -44,6 +45,7 @@ void State_Attack_Pre();
 void State_Attack();
 void State_Attack_Post();
 void State_Attack_Reset();
+void State_Paused();
 
 typedef enum
 {
@@ -61,12 +63,14 @@ typedef enum
 	Attack,
 	Attack_Post,
 	Attack_Reset,
-	Attack_Num
+	Paused,
+	State_Num
 } GameState;
 
 GameState state = Init;
+GameState lastState = Init;
 
-void (*fun_ptr_arr[Attack_Num])(void) = {
+void (*fun_ptr_arr[State_Num])(void) = {
 	State_Init,
 	State_Idle,
 	State_Player_Input_Attack,
@@ -80,7 +84,8 @@ void (*fun_ptr_arr[Attack_Num])(void) = {
 	State_Attack_Pre,
 	State_Attack,
 	State_Attack_Post,
-	State_Attack_Reset};
+	State_Attack_Reset,
+	State_Paused};
 
 struct Sprite *spriteHitEffect = 0;
 struct Sprite *spritePlayer = 0;
@@ -89,20 +94,31 @@ struct Sprite *button = 0;
 
 const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
+typedef enum {
+	normal,
+	black,
+	flash
+} BG_Palette;
+
+BG_Palette bgPaletteState = normal;
+
 #define BLACK_OUT_BG \
-	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3
+	bgPaletteState = black; \
+	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3; 
 
 #define FLASH_BG \
-	BGP_REG = (1 << 6) | (1 << 4) | (1 << 2) | 1
+	bgPaletteState = flash; \
+	BGP_REG = (1 << 6) | (1 << 4) | (1 << 2) | 1;
 
 #define RESTORE_BG \
-	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
+	bgPaletteState = normal; \
+	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0;
 
-#define OBJ1_ATTACK_COLOR \
-	OBP0_REG = (1 << 6) | (1 << 4) | (2 << 2) | 2
+// #define OBJ1_ATTACK_COLOR \
+// 	OBP0_REG = (1 << 6) | (1 << 4) | (2 << 2) | 2
 
-#define OBJ1_RESTORE_COLOR \
-	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
+// #define OBJ1_RESTORE_COLOR \
+// 	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
 
 #define HIDE_SPRITE(SPRITE) \
 	SPRITE->x = 160;        \
@@ -112,21 +128,21 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 #define BUTTON_Y 8
 
 #define SHOW_BUTTON(SPRITE) \
-	SPRITE->x = BUTTON_X;         \
+	SPRITE->x = BUTTON_X;   \
 	SPRITE->y = BUTTON_Y;
 
-#define PLAYER_X 20
+#define PLAYER_X 8
 #define PLAYER_Y 64
 
 #define ENEMY_X 112
 #define ENEMY_Y 64
 
 #define RESET_PLAYER_POSITION(SPRITE) \
-	SPRITE->x = PLAYER_X; \
+	SPRITE->x = PLAYER_X;             \
 	SPRITE->y = PLAYER_Y;
 
 #define RESET_ENEMY_POSITION(SPRITE) \
-	SPRITE->x = ENEMY_X; \
+	SPRITE->x = ENEMY_X;             \
 	SPRITE->y = ENEMY_Y;
 
 void UpdateBearHP();
@@ -141,6 +157,7 @@ UINT8 enemyHP = 56;
 //nine bg tiles representing the healthbar
 UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
 
+void State_Paused() {}
 void Start_StateGame()
 {
 	UINT8 i;
@@ -165,17 +182,43 @@ void Start_StateGame()
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
-	//INIT_CONSOLE(font, 3, 2);
-
-	//PlayMusic(music_mod_Data, 3, 1);
+	InitWindow(0,0,&pause);
+	PlayMusic(music_mod_Data, 3, 1);
 
 	UpdateBearHP();
 	UpdateEnemyHP();
 }
 
+unsigned char lastPalette = 0;
 void Update_StateGame()
 {
-	(*fun_ptr_arr[state])();
+	unsigned char map[1] = {1};
+	if (KEY_RELEASED(J_START))
+	{
+		if (state != Paused)
+		{
+			lastState = state;
+			state = Paused;
+
+			//HIDE_BKG;
+			SHOW_WIN;
+			HIDE_SPRITES;
+			lastPalette = BGP_REG;
+			RESTORE_BG;
+			InitScrollTiles(0, &font);	
+		}
+		else
+		{
+			InitScrollTiles(0, &tiles);
+			state = lastState;
+			SHOW_BKG;
+			HIDE_WIN;
+			SHOW_SPRITES;
+			BGP_REG = lastPalette;
+		}
+	}
+	else
+		(*fun_ptr_arr[state])();
 }
 
 #define DELAY_TIME 0x20
@@ -196,7 +239,7 @@ void State_Idle()
 		{
 			time = DELAY_TIME;
 			state = Attack_Failed;
-			PlayFx(CHANNEL_1, 10, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
+			PlayFx(CHANNEL_1, 4, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
 		}
 		return;
 	}
@@ -205,16 +248,18 @@ void State_Idle()
 	BLACK_OUT_BG;
 	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
+	SHOW_BUTTON(button)
+	enemyMoveSpeed = 1;
+	playerMoveSpeed = 1;
 
 	if (rand() % 2)
 	{
-		SHOW_BUTTON(button)
 		SpriteManagerLoadTiles(button, pressa.data, 0);
+		SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 		state = Player_Input_Attack;
 	}
 	else
 	{
-		SHOW_BUTTON(button)
 		SpriteManagerLoadTiles(button, pressb.data, 0);
 		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
 		state = Player_Defend;
@@ -225,11 +270,13 @@ void State_Idle()
 
 void State_Player_Defend()
 {
-	TranslateSprite(spriteEnemy, -enemyMoveSpeed, 0);
+	++enemyMoveSpeed;
 	if (spriteEnemy->x > spritePlayer->x)
 	{
 		if (KEY_PRESSED(J_B))
 			state = Player_Defend_Success_Init;
+
+		spriteEnemy->x -= (enemyMoveSpeed >> 1);
 	}
 	else
 		state = Player_Defend_Fail;
@@ -246,20 +293,23 @@ void State_Player_Defend_Success_Init()
 
 void State_Player_Defend_Success()
 {
-	if(time-- == 0){
+	if (time-- == 0)
+	{
 		state = Attack_Reset;
 	}
-	if (time % 8 == 0){
+	if (time % 8 == 0)
+	{
 		HIDE_SPRITE(spriteEnemy)
 	}
-	else{
+	else
+	{
 		RESET_ENEMY_POSITION(spriteEnemy)
 	}
 }
 
 void State_Player_Defend_Fail()
 {
-	if (spriteEnemy->x > 5)
+	if (spriteEnemy->x > enemyMoveSpeed)
 	{
 		TranslateSprite(spriteEnemy, -enemyMoveSpeed, 0);
 		return;
@@ -270,14 +320,15 @@ void State_Player_Defend_Fail()
 	spriteHitEffect->y = spritePlayer->y;
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
-	PlayFx(CHANNEL_1, 10, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 
 	state = Attack_Failed;
 }
 
 void State_Player_Input_Attack()
 {
-	TranslateSprite(spritePlayer, playerMoveSpeed, 0);
+	++playerMoveSpeed;
+	spritePlayer->x += (playerMoveSpeed >> 1);
 
 	if (KEY_PRESSED(J_A))
 	{
@@ -293,6 +344,8 @@ void State_Player_Input_Attack()
 			return;
 
 		SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
+		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
+		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 		state = Attack_Failed;
 	}
 }
@@ -303,14 +356,20 @@ void State_Attack_Success()
 		return;
 	BLACK_OUT_BG;
 	state = Attack_Pre;
+}
 
-	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
+void DamagePlayer(UINT8 damage){
+	if(damage < bearHP)
+		bearHP -= damage;
+	else
+		bearHP = 0;
+
+	UpdateBearHP();
 }
 
 void State_Attack_Failed()
 {
-	bearHP > 0 ? bearHP-- : bearHP;
-	UpdateBearHP();
+	DamagePlayer(8);
 	SHOW_BUTTON(button)
 	SpriteManagerLoadTiles(button, lose.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
@@ -326,10 +385,12 @@ void State_Attack_Failed_Idle()
 		spritePlayer->x = 20;
 		return;
 	}
-	if (time % 8 == 0){
+	if (time % 8 == 0)
+	{
 		HIDE_SPRITE(spritePlayer);
 	}
-	else{
+	else
+	{
 		RESET_PLAYER_POSITION(spritePlayer);
 	}
 }
@@ -347,7 +408,16 @@ void State_Attack_Pre()
 	spriteHitEffect->y = spriteEnemy->y;
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
-	PlayFx(CHANNEL_1, 10, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+}
+
+void DamageEnemy(UINT8 damage){
+	if(damage < enemyHP)
+		enemyHP -= damage;
+	else
+		enemyHP = 0;
+
+	UpdateEnemyHP();
 }
 
 void State_Attack()
@@ -356,13 +426,8 @@ void State_Attack()
 	{
 		state = Attack_Post;
 		time = DELAY_TIME;
-
-		enemyHP--;
-		UpdateEnemyHP();
+		DamageEnemy(8);
 	}
-
-	//DPRINT_POS(0, 0);
-	//DPrintf("x:%d y:%d  ", enemySprite->x, enemySprite->y);
 }
 
 void State_Attack_Post()
@@ -373,10 +438,12 @@ void State_Attack_Post()
 		spriteEnemy->x = 112;
 		return;
 	}
-	if (time % 8 == 0){
+	if (time % 8 == 0)
+	{
 		HIDE_SPRITE(spriteEnemy)
 	}
-	else{
+	else
+	{
 		RESET_ENEMY_POSITION(spriteEnemy)
 	}
 }
@@ -385,13 +452,13 @@ void State_Attack_Reset()
 {
 	state = Idle;
 	RESTORE_BG;
-	OBJ1_RESTORE_COLOR;
+	//OBJ1_RESTORE_COLOR;
 
 	SpriteManagerLoadTiles(button, pressa.data, 0);
 	HIDE_SPRITE(button)
 	SpriteManagerLoadTiles(spritePlayer, bear.data, 0);
 	SpriteManagerLoadTiles(spriteEnemy, enemy.data, 0);
-	
+
 	RESET_PLAYER_POSITION(spritePlayer)
 
 	RESET_ENEMY_POSITION(spriteEnemy)
