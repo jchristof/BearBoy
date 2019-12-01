@@ -33,5 +33,6 @@ void Update_StateTitle()
     if (ANY_KEY_PRESSED){
         SetState(StateGame);
         initrand(DIV_REG);
+        CLEAR_KEYS();
     }
 }

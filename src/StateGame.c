@@ -94,24 +94,13 @@ struct Sprite *button = 0;
 
 const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
-typedef enum {
-	normal,
-	black,
-	flash
-} BG_Palette;
+#define BLACK_OUT_BG        \
+	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3;
 
-BG_Palette bgPaletteState = normal;
-
-#define BLACK_OUT_BG \
-	bgPaletteState = black; \
-	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3; 
-
-#define FLASH_BG \
-	bgPaletteState = flash; \
+#define FLASH_BG            \
 	BGP_REG = (1 << 6) | (1 << 4) | (1 << 2) | 1;
 
-#define RESTORE_BG \
-	bgPaletteState = normal; \
+#define RESTORE_BG           \
 	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0;
 
 // #define OBJ1_ATTACK_COLOR \
@@ -167,6 +156,12 @@ void Start_StateGame()
 		SpriteManagerLoad(i);
 	}
 
+	playerMoveSpeed = 1;
+	enemyMoveSpeed = 1;
+
+	bearHP = 56;
+	enemyHP = 56;
+
 	SHOW_SPRITES;
 
 	spriteHitEffect = SpriteManagerAdd(SpriteHitEffect, 16, 160);
@@ -182,7 +177,7 @@ void Start_StateGame()
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
-	InitWindow(0,0,&pause);
+	InitWindow(0, 0, &pause);
 	PlayMusic(music_mod_Data, 3, 1);
 
 	UpdateBearHP();
@@ -200,12 +195,11 @@ void Update_StateGame()
 			lastState = state;
 			state = Paused;
 
-			//HIDE_BKG;
 			SHOW_WIN;
 			HIDE_SPRITES;
 			lastPalette = BGP_REG;
 			RESTORE_BG;
-			InitScrollTiles(0, &font);	
+			InitScrollTiles(0, &font);
 		}
 		else
 		{
@@ -233,6 +227,12 @@ void State_Init()
 
 void State_Idle()
 {
+	if(bearHP == 0 || enemyHP == 0)
+	{
+		SetState(StateTitle);
+		return;
+
+	}
 	if (time--)
 	{
 		if (KEY_PRESSED(J_A) || KEY_PRESSED(J_B))
@@ -285,6 +285,7 @@ void State_Player_Defend()
 void State_Player_Defend_Success_Init()
 {
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
+	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 	HIDE_SPRITE(button);
 	enemyHP--;
 	time = DELAY_TIME;
@@ -358,8 +359,9 @@ void State_Attack_Success()
 	state = Attack_Pre;
 }
 
-void DamagePlayer(UINT8 damage){
-	if(damage < bearHP)
+void DamagePlayer(UINT8 damage)
+{
+	if (damage < bearHP)
 		bearHP -= damage;
 	else
 		bearHP = 0;
@@ -411,8 +413,9 @@ void State_Attack_Pre()
 	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 }
 
-void DamageEnemy(UINT8 damage){
-	if(damage < enemyHP)
+void DamageEnemy(UINT8 damage)
+{
+	if (damage < enemyHP)
 		enemyHP -= damage;
 	else
 		enemyHP = 0;
