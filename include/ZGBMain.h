@@ -4,6 +4,7 @@
 #define STATES \
 _STATE(StateTitle)\
 _STATE(StateGame)\
+_STATE(StateWinLose)\
 STATE_DEF_END
 
 #define SPRITES \

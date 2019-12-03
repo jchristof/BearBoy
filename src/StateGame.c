@@ -1,7 +1,6 @@
 #include "Banks/SetBank2.h"
 #include <rand.h>
 
-#include "BankManager.h"
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
 #include "..\res\src\font.h"
