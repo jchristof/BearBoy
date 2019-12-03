@@ -16,4 +16,8 @@ SPRITE_DEF_END
 
 #include "ZGBMain_Init.h"
 
+extern UINT8 moveSpeedThrottle; 
+extern UINT8 consecutiveWins;
+extern UINT8 lastGameWasWin;
+
 #endif

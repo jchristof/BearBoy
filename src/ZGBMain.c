@@ -1,6 +1,10 @@
 #include "ZGBMain.h"
 #include "Math.h"
 
+UINT8 moveSpeedThrottle = 4;
+UINT8 consecutiveWins = 0;
+UINT8 lastGameWasWin = 0;
+
 UINT8 next_state = StateTitle;
 
 UINT8 GetTileReplacement(UINT8* tile_ptr, UINT8* tile) {

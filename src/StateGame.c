@@ -144,7 +144,7 @@ UINT8 enemyHP = 56;
 
 //nine bg tiles representing the healthbar
 UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
-
+UINT8 trophyTile[1] = {34};
 void State_Paused() {}
 void Start_StateGame()
 {
@@ -177,6 +177,11 @@ void Start_StateGame()
 
 	InitScrollTiles(0, &tiles);
 	InitWindow(0, 0, &pause);
+
+	for(i = 0; i < consecutiveWins; ++i){
+		set_bkg_tiles(i, 17, 1, 1, &(trophyTile[0]));
+	}
+
 	PlayMusic(music_mod_Data, 3, 1);
 
 	UpdateBearHP();
@@ -228,9 +233,11 @@ void State_Idle()
 {
 	if(bearHP == 0 || enemyHP == 0)
 	{
-		SetState(StateTitle);
-		return;
+		if(enemyHP == 0)
+			lastGameWasWin = 1;
 
+		SetState(StateWinLose);
+		return;
 	}
 	if (time--)
 	{
@@ -275,7 +282,7 @@ void State_Player_Defend()
 		if (KEY_PRESSED(J_B))
 			state = Player_Defend_Success_Init;
 
-		spriteEnemy->x -= (enemyMoveSpeed >> 1);
+		spriteEnemy->x -= (enemyMoveSpeed >> moveSpeedThrottle);
 	}
 	else
 		state = Player_Defend_Fail;
@@ -287,6 +294,7 @@ void State_Player_Defend_Success_Init()
 	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 	HIDE_SPRITE(button);
 	enemyHP--;
+	UpdateEnemyHP();
 	time = DELAY_TIME;
 	state = Player_Defend_Success;
 }
@@ -328,7 +336,7 @@ void State_Player_Defend_Fail()
 void State_Player_Input_Attack()
 {
 	++playerMoveSpeed;
-	spritePlayer->x += (playerMoveSpeed >> 1);
+	spritePlayer->x += (playerMoveSpeed >> moveSpeedThrottle);
 
 	if (KEY_PRESSED(J_A))
 	{
@@ -399,9 +407,13 @@ void State_Attack_Failed_Idle()
 void State_Attack_Pre()
 {
 	TranslateSprite(spritePlayer, playerMoveSpeed, 0);
-
-	if (spritePlayer->x < 160)
+	if(spritePlayer->x + playerMoveSpeed < 160){
+		spritePlayer->x += playerMoveSpeed;
 		return;
+	}
+	else{
+		spritePlayer->x = 160;
+	}
 
 	state = Attack;
 
