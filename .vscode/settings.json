@@ -5,6 +5,7 @@
         "setbank2.h": "c",
         "jump.h": "c",
         "enemy_attack_mode.h": "c",
-        "zgbmain.h": "c"
+        "zgbmain.h": "c",
+        "youdied.h": "c"
     }
 }
