@@ -28,9 +28,9 @@
 
 extern UINT8 *music_mod_Data[];
 
-UINT8 collision_tiles[] = {1, 0};
-
 void State_Init();
+void State_Intro();
+void State_Fight();
 void State_Idle();
 void State_Player_Input_Attack();
 void State_Player_Defend();
@@ -49,6 +49,8 @@ void State_Paused();
 typedef enum
 {
 	Init,
+	Intro,
+	Fight,
 	Idle,
 	Player_Input_Attack,
 	Player_Defend,
@@ -71,6 +73,8 @@ GameState lastState = Init;
 
 void (*fun_ptr_arr[State_Num])(void) = {
 	State_Init,
+	State_Intro,
+	State_Fight,
 	State_Idle,
 	State_Player_Input_Attack,
 	State_Player_Defend,
@@ -93,13 +97,13 @@ struct Sprite *button = 0;
 
 const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
-#define BLACK_OUT_BG        \
+#define BLACK_OUT_BG \
 	BGP_REG = (3 << 6) | (3 << 4) | (3 << 2) | 3;
 
-#define FLASH_BG            \
+#define FLASH_BG \
 	BGP_REG = (1 << 6) | (1 << 4) | (1 << 2) | 1;
 
-#define RESTORE_BG           \
+#define RESTORE_BG \
 	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0;
 
 // #define OBJ1_ATTACK_COLOR \
@@ -135,6 +139,7 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
 void UpdateBearHP();
 void UpdateEnemyHP();
+void clearWin();
 
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
@@ -145,6 +150,12 @@ UINT8 enemyHP = 56;
 //nine bg tiles representing the healthbar
 UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
 UINT8 trophyTile[1] = {34};
+UINT8 blankTile[1] = {0};
+UINT8 roundPhrase[] = {0x52, 0x4f, 0x55, 0x4e, 0x44};
+UINT8 numberTiles[] = {0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64};
+UINT8 readyPhrase[] = {0x52, 0x45, 0x41, 0x44, 0x59, 0x6c};
+UINT8 fightPhrase[] = {0x46, 0x49, 0x47, 0x48, 0x54, 0x65};
+
 void State_Paused() {}
 void Start_StateGame()
 {
@@ -167,18 +178,24 @@ void Start_StateGame()
 	SPRITE_SET_PALETTE(spriteHitEffect, 1);
 
 	spritePlayer = SpriteManagerAdd(SpritePlayer, PLAYER_X, PLAYER_Y);
+	spritePlayer->x = 0;
+
 	spriteEnemy = SpriteManagerAdd(SpriteEnemy, ENEMY_X, ENEMY_Y);
+	spriteEnemy->x = ENEMY_X + 16;
 
 	button = SpriteManagerAdd(SpriteButton, BUTTON_X, BUTTON_Y);
 	HIDE_SPRITE(button)
 
-	InitScroll(&map, collision_tiles, 0);
+	InitScroll(&map, 0, 0);
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
 	InitWindow(0, 0, &pause);
 
-	for(i = 0; i < consecutiveWins; ++i){
+	InitScrollTiles(64, &font);
+
+	for (i = 0; i < consecutiveWins; ++i)
+	{
 		set_bkg_tiles(i, 17, 1, 1, &(trophyTile[0]));
 	}
 
@@ -186,6 +203,36 @@ void Start_StateGame()
 
 	UpdateBearHP();
 	UpdateEnemyHP();
+
+	clearWin();
+	SHOW_WIN;
+	WY_REG = 120;
+	set_win_tiles(6, 1, 5, 1, roundPhrase);
+	set_win_tiles(12, 1, 1, 1, &numberTiles[consecutiveWins + 1]);
+
+	state = Init;
+	lastState = Init;
+}
+
+void clearWin()
+{
+	UINT8 x = 0;
+	UINT8 y = 0;
+	for (y = 0; y < 18; ++y)
+	{
+		for (x = 0; x < 20; ++x)
+		{
+			set_win_tiles(x, y, 1, 1, blankTile);
+		}
+	}
+}
+
+void clearWinLine(UINT8 line){
+	UINT8 x = 0;
+	for (x = 0; x < 20; ++x)
+	{
+		set_win_tiles(x, line, 1, 1, blankTile);
+	}
 }
 
 unsigned char lastPalette = 0;
@@ -223,17 +270,47 @@ void Update_StateGame()
 
 UINT8 time = DELAY_TIME;
 
+UINT8 count = 0;
+UINT8 blinkFreq = 0;
 void State_Init()
 {
-	state = Idle;
-	time = DELAY_TIME;
+	if(spritePlayer->x < PLAYER_X)
+		spritePlayer->x++;
+	
+	if(spriteEnemy->x > ENEMY_X)
+		spriteEnemy->x--;
+
+	if(ANY_KEY_PRESSED){
+		clearWinLine(1);
+		set_win_tiles(7, 1, 6, 1, readyPhrase);
+		time = DELAY_TIME;
+		state = Intro;
+		RESET_PLAYER_POSITION(spritePlayer);
+		RESET_ENEMY_POSITION(spriteEnemy);
+	}
+}
+
+void State_Intro(){
+	if(time-- == 0){
+		clearWinLine(1);
+		set_win_tiles(7, 1, 6, 1, fightPhrase);
+		state = Fight;
+		time = DELAY_TIME;
+	}
+}
+
+void State_Fight(){
+	if(time-- == 0){
+		HIDE_WIN;
+		state = Idle;
+	}
 }
 
 void State_Idle()
 {
-	if(bearHP == 0 || enemyHP == 0)
+	if (bearHP == 0 || enemyHP == 0)
 	{
-		if(enemyHP == 0)
+		if (enemyHP == 0)
 			lastGameWasWin = 1;
 
 		SetState(StateWinLose);
@@ -407,11 +484,13 @@ void State_Attack_Failed_Idle()
 void State_Attack_Pre()
 {
 	TranslateSprite(spritePlayer, playerMoveSpeed, 0);
-	if(spritePlayer->x + playerMoveSpeed < 160){
+	if (spritePlayer->x + playerMoveSpeed < 160)
+	{
 		spritePlayer->x += playerMoveSpeed;
 		return;
 	}
-	else{
+	else
+	{
 		spritePlayer->x = 160;
 	}
 
