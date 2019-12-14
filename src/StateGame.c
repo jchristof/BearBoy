@@ -186,12 +186,10 @@ void Start_StateGame()
 	button = SpriteManagerAdd(SpriteButton, BUTTON_X, BUTTON_Y);
 	HIDE_SPRITE(button);
 
-	//InitScroll(&map, 0, 0);
 	SetBkgTiles(&map);
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
-	InitScrollTiles(64, &font);
 
 	for (i = 0; i < consecutiveWins; ++i)
 	{
@@ -246,6 +244,7 @@ void Update_StateGame()
 			state = Paused;
 
 			clearWin();
+			InitWindow(0,0,&pause);
 			WY_REG = 0;
 			SHOW_WIN;
 			HIDE_SPRITES;
