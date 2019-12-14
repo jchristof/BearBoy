@@ -151,7 +151,7 @@ UINT8 enemyHP = 56;
 UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
 UINT8 trophyTile[1] = {34};
 UINT8 blankTile[1] = {0};
-UINT8 roundPhrase[] = {0x52, 0x4f, 0x55, 0x4e, 0x44};
+const UINT8 roundPhrase[] = {0x52, 0x4f, 0x55, 0x4e, 0x44};
 UINT8 numberTiles[] = {0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64};
 UINT8 readyPhrase[] = {0x52, 0x45, 0x41, 0x44, 0x59, 0x6c};
 UINT8 fightPhrase[] = {0x46, 0x49, 0x47, 0x48, 0x54, 0x65};
@@ -184,14 +184,13 @@ void Start_StateGame()
 	spriteEnemy->x = ENEMY_X + 16;
 
 	button = SpriteManagerAdd(SpriteButton, BUTTON_X, BUTTON_Y);
-	HIDE_SPRITE(button)
+	HIDE_SPRITE(button);
 
-	InitScroll(&map, 0, 0);
+	//InitScroll(&map, 0, 0);
+	SetBkgTiles(&map);
 	SHOW_BKG;
 
 	InitScrollTiles(0, &tiles);
-	InitWindow(0, 0, &pause);
-
 	InitScrollTiles(64, &font);
 
 	for (i = 0; i < consecutiveWins; ++i)
@@ -246,15 +245,15 @@ void Update_StateGame()
 			lastState = state;
 			state = Paused;
 
+			clearWin();
+			WY_REG = 0;
 			SHOW_WIN;
 			HIDE_SPRITES;
 			lastPalette = BGP_REG;
 			RESTORE_BG;
-			InitScrollTiles(0, &font);
 		}
 		else
 		{
-			InitScrollTiles(0, &tiles);
 			state = lastState;
 			SHOW_BKG;
 			HIDE_WIN;
