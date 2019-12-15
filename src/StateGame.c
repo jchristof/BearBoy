@@ -374,6 +374,8 @@ void State_Player_Defend_Fail()
 	HIDE_SPRITE(spriteEnemy);
 	spriteHitEffect->x = spritePlayer->x;
 	spriteHitEffect->y = spritePlayer->y;
+
+	SPRITE_SET_VMIRROR(spriteHitEffect);
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
@@ -469,6 +471,7 @@ void State_Attack_Pre()
 
 	spriteHitEffect->x = spriteEnemy->x;
 	spriteHitEffect->y = spriteEnemy->y;
+	SPRITE_UNSET_VMIRROR(spriteHitEffect);
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
 	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
