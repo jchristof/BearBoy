@@ -4,7 +4,6 @@
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
 #include "..\res\src\font.h"
-#include "..\res\src\pause.h"
 #include "..\res\src\jump.h"
 #include "..\res\src\bear.h"
 #include "..\res\src\lose.h"
@@ -23,8 +22,10 @@
 #include "SpriteManager.h"
 #include "Keys.h"
 #include "Print.h"
-
+#include "PauseScreen.h"
+#include "Utils.h"
 #include "Sound.h"
+#include "GameSound.h"
 
 extern UINT8 *music_mod_Data[];
 
@@ -88,7 +89,8 @@ void (*fun_ptr_arr[State_Num])(void) = {
 	State_Attack,
 	State_Attack_Post,
 	State_Attack_Reset,
-	State_Paused};
+	State_Paused
+};
 
 struct Sprite *spriteHitEffect = 0;
 struct Sprite *spritePlayer = 0;
@@ -139,7 +141,6 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
 void UpdateBearHP();
 void UpdateEnemyHP();
-void clearWin();
 
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
@@ -148,15 +149,17 @@ UINT8 bearHP = 56;
 UINT8 enemyHP = 56;
 
 //nine bg tiles representing the healthbar
-UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
-UINT8 trophyTile[1] = {34};
-UINT8 blankTile[1] = {0};
+const UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
+const UINT8 trophyTile[1] = {34};
 const UINT8 roundPhrase[] = {0x52, 0x4f, 0x55, 0x4e, 0x44};
-UINT8 numberTiles[] = {0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64};
-UINT8 readyPhrase[] = {0x52, 0x45, 0x41, 0x44, 0x59, 0x6c};
-UINT8 fightPhrase[] = {0x46, 0x49, 0x47, 0x48, 0x54, 0x65};
+const UINT8 numberTiles[] = {0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64};
+const UINT8 readyPhrase[] = {0x52, 0x45, 0x41, 0x44, 0x59, 0x6c};
+const UINT8 fightPhrase[] = {0x46, 0x49, 0x47, 0x48, 0x54, 0x65};
 
-void State_Paused() {}
+void State_Paused() {
+	UpdatePauseScreen();
+}
+
 void Start_StateGame()
 {
 	UINT8 i;
@@ -196,12 +199,10 @@ void Start_StateGame()
 		set_bkg_tiles(i, 17, 1, 1, &(trophyTile[0]));
 	}
 
-	PlayMusic(music_mod_Data, 3, 1);
-
 	UpdateBearHP();
 	UpdateEnemyHP();
 
-	clearWin();
+	ClearWindow();
 	SHOW_WIN;
 	WY_REG = 120;
 	set_win_tiles(6, 1, 5, 1, roundPhrase);
@@ -209,27 +210,6 @@ void Start_StateGame()
 
 	state = Init;
 	lastState = Init;
-}
-
-void clearWin()
-{
-	UINT8 x = 0;
-	UINT8 y = 0;
-	for (y = 0; y < 18; ++y)
-	{
-		for (x = 0; x < 20; ++x)
-		{
-			set_win_tiles(x, y, 1, 1, blankTile);
-		}
-	}
-}
-
-void clearWinLine(UINT8 line){
-	UINT8 x = 0;
-	for (x = 0; x < 20; ++x)
-	{
-		set_win_tiles(x, line, 1, 1, blankTile);
-	}
 }
 
 unsigned char lastPalette = 0;
@@ -240,14 +220,9 @@ void Update_StateGame()
 	{
 		if (state != Paused)
 		{
+			InitPauseScreen();
 			lastState = state;
 			state = Paused;
-
-			clearWin();
-			InitWindow(0,0,&pause);
-			WY_REG = 0;
-			SHOW_WIN;
-			HIDE_SPRITES;
 			lastPalette = BGP_REG;
 			RESTORE_BG;
 		}
@@ -267,9 +242,6 @@ void Update_StateGame()
 #define DELAY_TIME 0x20
 
 UINT8 time = DELAY_TIME;
-
-UINT8 count = 0;
-UINT8 blinkFreq = 0;
 void State_Init()
 {
 	if(spritePlayer->x < PLAYER_X)
@@ -279,7 +251,7 @@ void State_Init()
 		spriteEnemy->x--;
 
 	if(ANY_KEY_PRESSED){
-		clearWinLine(1);
+		ClearWindowLine(1);
 		set_win_tiles(7, 1, 6, 1, readyPhrase);
 		time = DELAY_TIME;
 		state = Intro;
@@ -290,9 +262,10 @@ void State_Init()
 
 void State_Intro(){
 	if(time-- == 0){
-		clearWinLine(1);
+		ClearWindowLine(1);
 		set_win_tiles(7, 1, 6, 1, fightPhrase);
 		state = Fight;
+		PlaySong(music_mod_Data, 3, 1);
 		time = DELAY_TIME;
 	}
 }
@@ -320,12 +293,12 @@ void State_Idle()
 		{
 			time = DELAY_TIME;
 			state = Attack_Failed;
-			PlayFx(CHANNEL_1, 4, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
+			PlaySound(CHANNEL_1, 4, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
 		}
 		return;
 	}
 
-	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
+	PlaySound(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
 	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
@@ -403,7 +376,7 @@ void State_Player_Defend_Fail()
 	spriteHitEffect->y = spritePlayer->y;
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
-	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 
 	state = Attack_Failed;
 }
@@ -428,7 +401,7 @@ void State_Player_Input_Attack()
 
 		SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
-		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+		PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 		state = Attack_Failed;
 	}
 }
@@ -498,7 +471,7 @@ void State_Attack_Pre()
 	spriteHitEffect->y = spriteEnemy->y;
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
-	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 }
 
 void DamageEnemy(UINT8 damage)

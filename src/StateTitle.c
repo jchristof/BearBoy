@@ -1,11 +1,13 @@
+#include "Banks/SetBank2.h"
+
 #include <rand.h>
 #include "ZGBMain.h"
-#include "Banks/SetBank2.h"
 #include "Keys.h"
 #include "Scroll.h"
 #include "SpriteManager.h"
+#include "GameSound.h"
 
-#include "..\res\src\font.h"
+#include "..\res\src\tiles.h"
 #include "..\res\src\title.h"
 
 extern UINT8 *intro_mod_Data[];
@@ -17,15 +19,16 @@ void Start_StateTitle()
     NR50_REG = 0x77; //Max volume
 
     SPRITES_8x16;
-
+    HIDE_WIN;
+    
     SpriteManagerLoad(0);
     SHOW_SPRITES;
     SpriteManagerAdd(SpritePlayer, 64, 64);
 
     InitScroll(&title, 0, 0);
     SHOW_BKG;
-    InitScrollTiles(0, &font);
-    PlayMusic(intro_mod_Data, 3, 1);
+    InitScrollTiles(0, &tiles);
+    PlaySong(intro_mod_Data, 3, 1);
 }
 
 void Update_StateTitle()

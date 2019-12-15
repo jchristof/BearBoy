@@ -20,5 +20,7 @@ SPRITE_DEF_END
 extern UINT8 moveSpeedThrottle; 
 extern UINT8 consecutiveWins;
 extern UINT8 lastGameWasWin;
+extern UINT8 musicOn;
+extern UINT8 sfxOn;
 
 #endif
