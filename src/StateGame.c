@@ -141,6 +141,7 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
 void UpdateBearHP();
 void UpdateEnemyHP();
+void DamageEnemy(UINT8 damage);
 
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
@@ -341,8 +342,8 @@ void State_Player_Defend_Success_Init()
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 	HIDE_SPRITE(button);
-	enemyHP--;
-	UpdateEnemyHP();
+	DamageEnemy(8);
+
 	time = DELAY_TIME;
 	state = Player_Defend_Success;
 }
@@ -426,6 +427,16 @@ void DamagePlayer(UINT8 damage)
 	UpdateBearHP();
 }
 
+void DamageEnemy(UINT8 damage)
+{
+	if (damage < enemyHP)
+		enemyHP -= damage;
+	else
+		enemyHP = 0;
+
+	UpdateEnemyHP();
+}
+
 void State_Attack_Failed()
 {
 	DamagePlayer(8);
@@ -475,16 +486,6 @@ void State_Attack_Pre()
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
 	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
-}
-
-void DamageEnemy(UINT8 damage)
-{
-	if (damage < enemyHP)
-		enemyHP -= damage;
-	else
-		enemyHP = 0;
-
-	UpdateEnemyHP();
 }
 
 void State_Attack()
