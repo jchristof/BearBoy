@@ -2,6 +2,7 @@
 #include "main.h"
 #include "gbt_player.h"
 #include "BankManager.h"
+#include "Sound.h"
 
 typedef struct {
     const unsigned char** music;
@@ -31,16 +32,16 @@ void PlaySong(const unsigned char* music[], unsigned char bank, unsigned char lo
     PlayMusic(music, bank, loop);
 }
 
-void PlaySound(SOUND_CHANNEL channel, UINT8 mute_frames, ...){
-    va_list args;
-    va_start(args, mute_frames);
+// void PlaySound(SOUND_CHANNEL channel, UINT8 mute_frames, ...){
+//     va_list list;
+//     va_start(list, mute_frames);
 
-    if(!audio.sfxMuted){
-        PlayFx(channel, mute_frames, args);
-    }
+//     //if(!audio.sfxMuted){
+//         PlayFx(channel, mute_frames, &(list[0]));
+//    // }
     
-    va_end(args);
-}
+//     va_end(list);
+// }
 
 void MuteMusic(){
     audio.musicMuted = 1;
@@ -49,6 +50,7 @@ void MuteMusic(){
 }
 
 void MuteSfx(){
+    MuteFx(1);
     audio.sfxMuted = 1;
 }
 
@@ -61,6 +63,7 @@ void UnMuteMusic(){
 }
 
 void UnMuteSfx(){
+    MuteFx(0);
     audio.sfxMuted = 0;
 }
 

@@ -294,12 +294,12 @@ void State_Idle()
 		{
 			time = DELAY_TIME;
 			state = Attack_Failed;
-			PlaySound(CHANNEL_1, 4, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
+			PlayFx(CHANNEL_1, 4, 0x4f, 0x96, 0xB7, 0xBB, 0x85);
 		}
 		return;
 	}
 
-	PlaySound(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
+	PlayFx(CHANNEL_4, 4, 0x0c, 0x41, 0x30, 0xc0);
 	BLACK_OUT_BG;
 	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
@@ -379,7 +379,7 @@ void State_Player_Defend_Fail()
 	SPRITE_SET_VMIRROR(spriteHitEffect);
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
-	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 
 	state = Attack_Failed;
 }
@@ -404,7 +404,7 @@ void State_Player_Input_Attack()
 
 		SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
-		PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 		state = Attack_Failed;
 	}
 }
@@ -485,7 +485,7 @@ void State_Attack_Pre()
 	SPRITE_UNSET_VMIRROR(spriteHitEffect);
 	SetSpriteAnim(spriteHitEffect, anim_slash, 15);
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
-	PlaySound(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+	PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 }
 
 void State_Attack()
