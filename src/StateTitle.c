@@ -6,11 +6,26 @@
 #include "Scroll.h"
 #include "SpriteManager.h"
 #include "GameSound.h"
+#include "Utils.h"
+#include "PauseScreen.h"
 
 #include "..\res\src\tiles.h"
 #include "..\res\src\title.h"
 
+#define NEXT_OPTION currentOption++; if(currentOption == Num){ currentOption = 0;}
+#define PREV_OPTION if(currentOption == 0){ currentOption = Num - 1;} else {currentOption--;}
+
 extern UINT8 *intro_mod_Data[];
+typedef enum {
+	Play,
+    Options,
+	Num
+} Option;
+
+Option currentOption = Play;
+
+const UVector const cursorPosition[Num] = {{4,15}, {4,16} };
+const UVector const *cp = 0;
 
 void Start_StateTitle()
 {
@@ -29,13 +44,44 @@ void Start_StateTitle()
     SHOW_BKG;
     InitScrollTiles(0, &tiles);
     PlaySong(intro_mod_Data, 3, 1);
+    currentOption = Play;
+
+    cp = &(cursorPosition[currentOption]);
+    set_bkg_tiles(cp->x, cp->y, 1, 1, cursorTile);
+}
+
+void TitlePreviousOption(){
+    cp = &(cursorPosition[currentOption]);
+    set_bkg_tiles(cp->x, cp->y, 1, 1, blankTile);
+    PREV_OPTION;
+    cp =  &cursorPosition[currentOption];
+    set_bkg_tiles(cp->x, cp->y, 1, 1, cursorTile);
+}
+
+void TitleNextOption(){
+    cp =  &cursorPosition[currentOption];
+    set_bkg_tiles(cp->x, cp->y, 1, 1, blankTile);
+    NEXT_OPTION;
+    cp =  &cursorPosition[currentOption];
+    set_bkg_tiles(cp->x, cp->y, 1, 1, cursorTile);
 }
 
 void Update_StateTitle()
 {
-    if (ANY_KEY_PRESSED){
-        SetState(StateGame);
-        initrand(DIV_REG);
-        CLEAR_KEYS();
+    if(KEY_RELEASED(J_UP)){
+        TitlePreviousOption();
+    }
+    else if(KEY_RELEASED(J_DOWN)){
+        TitleNextOption();
+    }
+    else if (KEY_RELEASED(J_A)){
+        if(currentOption == Play){
+            SetState(StateGame);
+            initrand(DIV_REG);
+            CLEAR_KEYS();
+        }
+        else{
+            InitPauseScreen();
+        }
     }
 }

@@ -7,6 +7,7 @@
 #include "Scroll.h"
 #include "Keys.h"
 #include "GameSound.h"
+#include "Utils.h"
 
 #define NEXT_OPTION currentPauseOption++; if(currentPauseOption == PauseOptionsNum){ currentPauseOption = 0;}
 #define PREV_OPTION if(currentPauseOption == 0){ currentPauseOption = PauseOptionsNum - 1;} else {currentPauseOption--;}
@@ -21,14 +22,8 @@ typedef enum {
 	PauseOptionsNum
 } PauseOption;
 
-typedef struct {
-	UINT8 x;
-	UINT8 y;
-} UVector;
-
 const UVector pauseCursorPosition[PauseOptionsNum] = {{3,3}, {3,4}, {3,6} };
 PauseOption currentPauseOption = Music;
-const UINT8 cursorTile[1] = {109};
 
 void InitPauseScreen(){
     InitWindow(0,0,&pause);
