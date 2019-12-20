@@ -142,6 +142,7 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 void UpdateBearHP();
 void UpdateEnemyHP();
 void DamageEnemy(UINT8 damage);
+void ShowRound();
 
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
@@ -203,14 +204,31 @@ void Start_StateGame()
 	UpdateBearHP();
 	UpdateEnemyHP();
 
-	ClearWindow();
-	SHOW_WIN;
-	WY_REG = 120;
-	set_win_tiles(6, 1, 5, 1, roundPhrase);
-	set_win_tiles(12, 1, 1, 1, &numberTiles[consecutiveWins + 1]);
+	ShowRound();
 
 	state = Init;
 	lastState = Init;
+}
+
+//show the two digit round count
+void ShowRound(){
+	
+	UINT8 tens = (consecutiveWins + 1) / 10;
+	UINT8 ones = (consecutiveWins + 1) % 10;
+	UINT8 position = 12;
+
+	ClearWindow();
+	SHOW_WIN;
+	WY_REG = 120;
+
+	if(tens){
+		set_win_tiles(position, 1, 1, 1, &numberTiles[tens]);
+		position++;
+	}
+
+	set_win_tiles(position, 1, 1, 1, &numberTiles[ones]);
+
+	set_win_tiles(6, 1, 5, 1, roundPhrase);
 }
 
 unsigned char lastPalette = 0;

@@ -124,7 +124,7 @@ void PauseInit(){
 }
 void PauseUpdate(){
     UpdatePauseScreen();
-    if(KEY_RELEASED(J_START)){
+    if(KEY_RELEASED(J_B)){
         Title_SetState(Menu);
         CLEAR_KEYS();
     }
