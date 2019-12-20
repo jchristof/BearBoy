@@ -95,5 +95,6 @@ void UpdatePauseScreen(){
 }
 
 void ExitPauseScreen(){
-
+    HIDE_WIN;
+    SHOW_SPRITES;
 }
