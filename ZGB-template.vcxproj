@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\SpriteActionCursor.c" />
     <ClCompile Include="src\SpriteEnemy.c" />
     <ClCompile Include="src\SpriteHitEffect.c" />
     <ClCompile Include="src\SpritePlayer.c" />
