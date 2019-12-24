@@ -12,7 +12,7 @@ typedef struct{
 } DialogSequence;
 
 void Dialog_Init();
-void Dialog_Start();
+void Dialog_Start(DialogSequence *dialogSequence);
 void Dialog_Update();
 
 #endif

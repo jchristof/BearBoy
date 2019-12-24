@@ -1,4 +1,5 @@
 #include "Dialog.h"
+#include "Utils.h"
 
 const UINT8 dialogFrameLeft[] = {42, 45, 46, 43, 0, 47, 44, 49, 48};
 
