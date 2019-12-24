@@ -109,7 +109,8 @@ void MenuUpdate(){
     }
     else if (KEY_RELEASED(J_A)){
         if(currentOption == Play){
-            SetState(StateTutorial);
+            //SetState(StateTutorial);
+            SetState(StateGame);
             initrand(DIV_REG);
             CLEAR_KEYS();
         }
