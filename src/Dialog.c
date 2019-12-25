@@ -19,7 +19,7 @@ UINT8 currentLine = 0;
 UINT8 currentCharIndex = 0;
 UINT8 currentTile = 96;
 UINT8 dialogActive = 0;
-char* textLine = 0;
+const char* currentChar = 0;
 
 void Dialog_Init()
 {
@@ -31,12 +31,12 @@ void Dialog_Init()
     PUSH_BANK(2);
     set_bkg_data(96, 32, ascii.data->data);
     POP_BANK;
-    set_win_tiles(3, 0, 16, 2, textBoxArea);
+    set_win_tiles(3, 0, 17, 2, textBoxArea);
 }
 
 void ClearTextArea(){
     UINT8 i = 0;
-    for(i = 0; i < 32; ++i)
+    for(i = 0; i < 34; ++i)
         set_bkg_data(96 + i, 1, &(ascii.data->data[0]));
 }
 
@@ -47,7 +47,7 @@ void Dialog_Reset(){
     currentCharIndex = 0;
     currentTile = 96;
     dialogActive = 0;
-    textLine = 0;
+    currentChar = 0;
 }
 
 void Dialog_Start(DialogSequence *dialog)
@@ -56,27 +56,38 @@ void Dialog_Start(DialogSequence *dialog)
     ClearTextArea();
     sequence = dialog;
     dialogActive = 1;
-    textLine = sequence->text[0];
+    currentChar = sequence->text;
 }
 
-void Dialog_Update()
+void Dialog_Continue(){
+    ClearTextArea();
+    currentTile = 96;
+    timer = TYPE_TIME;
+}
+
+DialogState Dialog_Update()
 {
     if(sequence == 0)
-        return;
-
-    if(timer--)
-        return;
-
-    if(*textLine == 0){
+        return Dialog_State_Done;
+        
+    if((*currentChar) < ' '){
         sequence = 0;
-        return;
+        return Dialog_State_Done;
     }
+
+    if(currentTile == 130)
+        return Dialog_State_Waiting;
+    
+    if(timer--)
+        return Dialog_State_Running;
     
     timer = TYPE_TIME;
 
     PUSH_BANK(2);
-    set_bkg_data(currentTile, 1, &(ascii.data->data[((*textLine)-32)*16]));
+    set_bkg_data(currentTile, 1, &(ascii.data->data[((*currentChar)-32)*16]));
     POP_BANK;
     currentTile++;
-    textLine++;
+    currentChar++;
+
+    return Dialog_State_Running;
 }

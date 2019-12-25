@@ -46,6 +46,17 @@ DialogSequence dialogSequence;
 struct Sprite *portraitSprite = 0;
 
 const char dialog1[] = {'L','i','s','t','e','n',' ','u','p','.','.','.','\0'};
+const char dia[] = 
+"Yo bazee, you    gotta try this   game!!!          Let me tell you  how it works.    This is you.     This is your enemy.▼";
+ //---------------//---------------//---------------//---------------//---------------//---------------
+void Tutorial_SetState(TutorialState newState){
+    if(tutorialStates[currentState].exit != 0)
+        tutorialStates[currentState].exit();
+
+    currentState = newState;
+    if(tutorialStates[currentState].init != 0)
+        tutorialStates[currentState].init();
+}
 
 void Start_StateTutorial() {
     UINT8 i;
@@ -63,19 +74,30 @@ void Start_StateTutorial() {
     currentState = Start;
 
     Dialog_Init();
-    
+
+    dialogSequence.text = dia;
+    Dialog_Start(&dialogSequence);
 }
 
 void Update_StateTutorial() {
+    DialogState dialogState = Dialog_Update();
+
     if(tutorialStates[currentState].update != 0)
         tutorialStates[currentState].update();
 
-    if(KEY_TICKED(J_A)){
-        dialogSequence.text[0] = dialog1;
-        Dialog_Start(&dialogSequence);
+    
+    if(dialogState == Dialog_State_Waiting){
+        if(KEY_TICKED(J_A)){
+            Dialog_Continue();
+        }
     }
+    // else if (dialogState == Dialog_State_Done){
+    //     if(KEY_TICKED(J_A)){
+    //         //next state
+    //     }
+    // }
 
-    Dialog_Update();
+    
 }
 
 void Destroy_StateTutorial() {}
