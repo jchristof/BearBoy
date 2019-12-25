@@ -6,7 +6,7 @@
 typedef struct{
     struct Sprite* portrait;
     const struct TilesInfoInternal* tileInfo;
-    const char* text;
+    const char* text[2];
     UINT8 portraitSide;
 
 } DialogSequence;

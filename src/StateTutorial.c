@@ -26,6 +26,7 @@
 #include "Sound.h"
 #include "GameSound.h"
 #include "Utils.h"
+#include "Dialog.h"
 
 typedef enum{
     Start,
@@ -40,9 +41,11 @@ State tutorialStates[TutorialState_Num] = {
     {0, 0, 0}
 };
 
+DialogSequence dialogSequence;
+
 struct Sprite *portraitSprite = 0;
 
-const char dialog1[] = "Listen up ...";
+const char dialog1[] = {'L','i','s','t','e','n',' ','u','p','.','.','.','\0'};
 
 void Start_StateTutorial() {
     UINT8 i;
@@ -66,6 +69,13 @@ void Start_StateTutorial() {
 void Update_StateTutorial() {
     if(tutorialStates[currentState].update != 0)
         tutorialStates[currentState].update();
+
+    if(KEY_TICKED(J_A)){
+        dialogSequence.text[0] = dialog1;
+        Dialog_Start(&dialogSequence);
+    }
+
+    Dialog_Update();
 }
 
 void Destroy_StateTutorial() {}
