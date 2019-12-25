@@ -24,7 +24,6 @@ DialogSequence *sequence = 0;
 UINT8 currentLine = 0;
 UINT8 currentCharIndex = 0;
 UINT8 currentTile = FIRST_DIALOG_TILE_POSITION;
-UINT8 dialogActive = 0;
 const char* currentChar = 0;
 
 void Dialog_Init()
@@ -52,7 +51,6 @@ void Dialog_Reset(){
     currentLine = 0;
     currentCharIndex = 0;
     currentTile = FIRST_DIALOG_TILE_POSITION;
-    dialogActive = 0;
     currentChar = 0;
 }
 
@@ -61,7 +59,6 @@ void Dialog_Start(DialogSequence *dialog)
     Dialog_Reset();
     ClearTextArea();
     sequence = dialog;
-    dialogActive = 1;
     currentChar = sequence->text;
 }
 

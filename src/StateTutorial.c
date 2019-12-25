@@ -27,43 +27,124 @@
 #include "GameSound.h"
 #include "Utils.h"
 #include "Dialog.h"
-
-typedef enum{
-    Start,
-    Pause,
-    TutorialState_Num
-} TutorialState;
-
-TutorialState currentState = Start;
-
-State tutorialStates[TutorialState_Num] = {
-    {0, 0, 0},
-    {0, 0, 0}
-};
-
-DialogSequence dialogSequence;
+#include "GamePlayCommon.h"
 
 struct Sprite *portraitSprite = 0;
 
-const char dialog1[] = 
-"Yo, you gotta try this game!!!    Let me tell you   how it works.    This is you.     This is your enemy.▼";
+typedef enum{
+    D0,
+    D1,
+    D2,
+    D3,
+    D4,
+    D5,
+    TutorialFinish,
+    TutorialState_Num
+} TutorialState;
+
+const UINT8 tutorialHealthBarTiles[20] = {32, 31, 31, 31, 31, 31, 31, 31, 33, 0, 0, 32, 31, 31, 31, 31, 31, 31, 31, 33};
+
+TutorialState currentTutorialState = D0;
+
+DialogSequence dialogSequence;
+
+const char d0[] = 
+"Yo, you gotta trythis game!!!     Let me show you  how to play.▼";
+ //---------------//---------------//---------------//---------------//---------------//---------------
+const char d1[] = "This is you.▼";
+const char d2[] = 
+ "This is your     nemesis.▼";
+  //---------------//---------------//---------------//---------------//---------------//---------------
+const char d3[] = 
+"You'll take turnsattacking and    defending.▼";
  //---------------//---------------//---------------//---------------//---------------//---------------
 
- void Dialog1_Init(){}
- void Dialog1_Update(){}
- void Dialog1_Exit(){}
- 
-void Tutorial_SetState(TutorialState newState){
-    if(tutorialStates[currentState].exit != 0)
-        tutorialStates[currentState].exit();
+const char d4[] = 
+"When an action   button appears,  press it quickly to attack or     defend.▼";
+ //---------------//---------------//---------------//---------------//---------------//---------------
 
-    currentState = newState;
-    if(tutorialStates[currentState].init != 0)
-        tutorialStates[currentState].init();
+const char d5[] = 
+"These bars show  your health.     Beat your enemy  to progress to   the next round.▼";
+ //---------------//---------------//---------------//---------------//---------------//---------------
+
+ void D0_Init(){
+    dialogSequence.text = d0;
+    Dialog_Start(&dialogSequence);
+ }
+
+ void D1_Init(){
+   dialogSequence.text = d1;
+   Dialog_Start(&dialogSequence);
+ }
+
+ void D1_Exit(){
+    spritePlayer = SpriteManagerAdd(SpritePlayer, PLAYER_X, PLAYER_Y);
+ }
+
+  void D2_Init(){
+   dialogSequence.text = d2;
+   Dialog_Start(&dialogSequence);
+ }
+
+ void D2_Exit(){
+    spriteEnemy = SpriteManagerAdd(SpriteEnemy, ENEMY_X, ENEMY_Y);
+ }
+
+  void D3_Init(){
+   dialogSequence.text = d3;
+   Dialog_Start(&dialogSequence);
+ }
+
+ void D3_Exit(){}
+
+void D4_Init(){
+   dialogSequence.text = d4;
+   Dialog_Start(&dialogSequence);
+   button = SpriteManagerAdd(SpriteButton, BUTTON_X, BUTTON_Y);
+ }
+
+ void D4_Exit(){
+    HIDE_SPRITE(button);
+ }
+
+void D5_Init(){
+   dialogSequence.text = d5;
+   Dialog_Start(&dialogSequence);
+
+    set_bkg_tiles(0,0, 20, 1, tutorialHealthBarTiles);
+ }
+
+ void D5_Exit(){
+
+ }
+
+void Tutorial_Finish(){
+    SetState(StateGame);
 }
+
+State tutorialStates[TutorialState_Num] = {
+    {D0_Init, 0, 0},
+    {D1_Init, 0, D1_Exit},
+    {D2_Init, 0, D2_Exit},
+    {D3_Init, 0, D3_Exit},
+    {D4_Init, 0, D4_Exit},
+    {D5_Init, 0, D5_Exit},
+    {Tutorial_Finish, 0, 0},
+};
+
+void Tutorial_SetState(TutorialState newState){
+    if(tutorialStates[currentTutorialState].exit != 0)
+        tutorialStates[currentTutorialState].exit();
+
+    currentTutorialState = newState;
+    if(tutorialStates[currentTutorialState].init != 0)
+        tutorialStates[currentTutorialState].init();
+}
+
 
 void Start_StateTutorial() {
     UINT8 i;
+    UINT8 emptyTile[1] = {0};
     SHOW_SPRITES;
 
 	for (i = 0; i != N_SPRITE_TYPES; ++i)
@@ -75,19 +156,22 @@ void Start_StateTutorial() {
     SetBkgTiles(&map);
     InitScrollTiles(0, &tiles);
 
-    currentState = Start;
+    for (i = 0; i != 20; ++i)
+	{
+		set_bkg_tiles(i,0, 1, 1, emptyTile);
+	}
+
+    currentTutorialState = D0;
 
     Dialog_Init();
-
-    dialogSequence.text = dia;
-    Dialog_Start(&dialogSequence);
+    D0_Init();
 }
 
 void Update_StateTutorial() {
     DialogState dialogState = Dialog_Update();
 
-    if(tutorialStates[currentState].update != 0)
-        tutorialStates[currentState].update();
+    if(tutorialStates[currentTutorialState].update != 0)
+        tutorialStates[currentTutorialState].update();
 
     
     if(dialogState == Dialog_State_Waiting){
@@ -96,9 +180,10 @@ void Update_StateTutorial() {
         }
     }
     else if (dialogState == Dialog_State_Done){
-    //     if(KEY_TICKED(J_A)){
-    //         //next state
-    //     }
+        if(KEY_TICKED(J_A)){
+            if(currentTutorialState < TutorialState_Num - 1u)
+                Tutorial_SetState(currentTutorialState + 1);    
+        }
      }
 
     
