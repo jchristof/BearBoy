@@ -1,23 +1,29 @@
 #include "Dialog.h"
 #include "Utils.h"
 #include "BankManager.h"
+#include "Keys.h"
 
 #include "..\res\src\ascii.h"
 
+//tiles that make up a 1px square frame for the portrait
 const UINT8 dialogFrameLeft[] = {42, 45, 46, 43, 0, 47, 44, 49, 48};
-const UINT8 textBoxArea[] = {96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,
-                            113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129};
+//all of the tiles that can display text - these are the last rows of bank 3 vram
+const UINT8 textBoxArea[] = {94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,
+                            111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127};
 
 #define CLEAR_DIALOG(dialog) 
 #define DIALOG_OPEN_POSITION 126
 #define DIALOG_CLOSED_POSITION 144
+#define FIRST_DIALOG_TILE_POSITION 94
+#define LAST_DIALOG_TILE_POSITION 127
+#define DIALOG_TILE_COUNT (LAST_DIALOG_TILE_POSITION - FIRST_DIALOG_TILE_POSITION)
 
-#define TYPE_TIME 8
+#define TYPE_TIME 2
 UINT8 timer = TYPE_TIME;
 DialogSequence *sequence = 0;
 UINT8 currentLine = 0;
 UINT8 currentCharIndex = 0;
-UINT8 currentTile = 96;
+UINT8 currentTile = FIRST_DIALOG_TILE_POSITION;
 UINT8 dialogActive = 0;
 const char* currentChar = 0;
 
@@ -29,15 +35,15 @@ void Dialog_Init()
 
     set_win_tiles(0, 0, 3, 3, dialogFrameLeft);
     PUSH_BANK(2);
-    set_bkg_data(96, 32, ascii.data->data);
+    set_bkg_data(FIRST_DIALOG_TILE_POSITION, DIALOG_TILE_COUNT, ascii.data->data);
     POP_BANK;
     set_win_tiles(3, 0, 17, 2, textBoxArea);
 }
 
 void ClearTextArea(){
     UINT8 i = 0;
-    for(i = 0; i < 34; ++i)
-        set_bkg_data(96 + i, 1, &(ascii.data->data[0]));
+    for(i = 0; i < DIALOG_TILE_COUNT; ++i)
+        set_bkg_data(FIRST_DIALOG_TILE_POSITION + i, 1, &(ascii.data->data[0]));
 }
 
 void Dialog_Reset(){
@@ -45,7 +51,7 @@ void Dialog_Reset(){
     sequence = 0;
     currentLine = 0;
     currentCharIndex = 0;
-    currentTile = 96;
+    currentTile = FIRST_DIALOG_TILE_POSITION;
     dialogActive = 0;
     currentChar = 0;
 }
@@ -61,7 +67,7 @@ void Dialog_Start(DialogSequence *dialog)
 
 void Dialog_Continue(){
     ClearTextArea();
-    currentTile = 96;
+    currentTile = FIRST_DIALOG_TILE_POSITION;
     timer = TYPE_TIME;
 }
 
@@ -75,9 +81,12 @@ DialogState Dialog_Update()
         return Dialog_State_Done;
     }
 
-    if(currentTile == 130)
+    if(currentTile == LAST_DIALOG_TILE_POSITION + 1)
         return Dialog_State_Waiting;
     
+    if(KEY_HELD(J_A))
+        timer = 0;
+
     if(timer--)
         return Dialog_State_Running;
     

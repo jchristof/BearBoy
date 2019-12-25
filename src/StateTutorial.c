@@ -45,10 +45,14 @@ DialogSequence dialogSequence;
 
 struct Sprite *portraitSprite = 0;
 
-const char dialog1[] = {'L','i','s','t','e','n',' ','u','p','.','.','.','\0'};
-const char dia[] = 
-"Yo bazee, you    gotta try this   game!!!          Let me tell you  how it works.    This is you.     This is your enemy.▼";
+const char dialog1[] = 
+"Yo, you gotta try this game!!!    Let me tell you   how it works.    This is you.     This is your enemy.▼";
  //---------------//---------------//---------------//---------------//---------------//---------------
+
+ void Dialog1_Init(){}
+ void Dialog1_Update(){}
+ void Dialog1_Exit(){}
+ 
 void Tutorial_SetState(TutorialState newState){
     if(tutorialStates[currentState].exit != 0)
         tutorialStates[currentState].exit();
@@ -91,11 +95,11 @@ void Update_StateTutorial() {
             Dialog_Continue();
         }
     }
-    // else if (dialogState == Dialog_State_Done){
+    else if (dialogState == Dialog_State_Done){
     //     if(KEY_TICKED(J_A)){
     //         //next state
     //     }
-    // }
+     }
 
     
 }
