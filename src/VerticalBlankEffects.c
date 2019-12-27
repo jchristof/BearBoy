@@ -1,5 +1,7 @@
 #include <gb/gb.h>
 
+#include "main.h"
+
 UINT8 bgOffset = 0;
 #define FRAME_SKIP 32
 
@@ -86,25 +88,29 @@ void InGameHblUpdate(){
 UINT8 interrrupts_emabled = 0;
 
 void InGameEnableHbl(){
+    LYC_REG = 7;
     interrrupts_emabled = 1;
 	disable_interrupts();
 	add_LCD(InGameHbl);
-    add_VBL(InGameHblUpdate);
+    //add_VBL(InGameHblUpdate);
+    extra_vbl = InGameHblUpdate;
     set_interrupts(VBL_IFLAG | TIM_IFLAG | LCD_IFLAG);
 	enable_interrupts();
 }
 
 void InGameDisableHbl(){
+    UINT8 wait = 255;
     if(interrrupts_emabled == 0)
         return;
     
     interrrupts_emabled = 0;
-    
+    set_interrupts(VBL_IFLAG | TIM_IFLAG);
 	disable_interrupts();
+    while(wait--)
     remove_LCD(InGameHbl);
-    DISPLAY_OFF;
-    remove_VBL(InGameHblUpdate);
+    extra_vbl = 0;
+    //remove_VBL(InGameHblUpdate);
     set_interrupts(VBL_IFLAG | TIM_IFLAG);
 	enable_interrupts();
-    DISPLAY_ON;
+
 }
