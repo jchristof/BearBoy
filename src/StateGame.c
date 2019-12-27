@@ -26,6 +26,7 @@
 #include "Sound.h"
 #include "GameSound.h"
 #include "GamePlayCommon.h"
+#include "VerticalBlankEffects.h"
 
 extern UINT8 *music_mod_Data[];
 
@@ -138,6 +139,7 @@ void State_Paused() {
 void Start_StateGame()
 {
 	UINT8 i;
+	InGameEnableHbl();
 
 	for (i = 0; i != N_SPRITE_TYPES; ++i)
 	{
@@ -208,7 +210,8 @@ unsigned char lastPalette = 0;
 void Update_StateGame()
 {
 	unsigned char map[1] = {1};
-	if (KEY_RELEASED(J_START))
+
+	if (KEY_TICKED(J_START))
 	{
 		if (state != Paused)
 		{
@@ -229,6 +232,10 @@ void Update_StateGame()
 	}
 	else
 		(*fun_ptr_arr[state])();
+}
+
+void Exit_GameState(){
+	InGameDisableHbl();
 }
 
 #define DELAY_TIME 0x20
@@ -276,6 +283,7 @@ void State_Idle()
 		if (enemyHP == 0)
 			lastGameWasWin = 1;
 
+		Exit_GameState();
 		SetState(StateWinLose);
 		return;
 	}
@@ -319,7 +327,7 @@ void State_Player_Defend()
 	++enemyMoveSpeed;
 	if (spriteEnemy->x > spritePlayer->x)
 	{
-		if (KEY_PRESSED(J_B))
+		if (KEY_TICKED(J_B))
 			state = Player_Defend_Success_Init;
 
 		spriteEnemy->x -= (enemyMoveSpeed >> moveSpeedThrottle);
@@ -380,7 +388,7 @@ void State_Player_Input_Attack()
 	++playerMoveSpeed;
 	spritePlayer->x += (playerMoveSpeed >> moveSpeedThrottle);
 
-	if (KEY_PRESSED(J_A))
+	if (KEY_TICKED(J_A))
 	{
 		FLASH_BG;
 		SHOW_BUTTON(button)
