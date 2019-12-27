@@ -5,9 +5,7 @@
 #include "Print.h"
 #include "ZGBMain.h"
 
-struct Sprite* enemySprite;
 void Start_SpriteEnemy() {
-    enemySprite = THIS;
 }
 
 void Update_SpriteEnemy() {
