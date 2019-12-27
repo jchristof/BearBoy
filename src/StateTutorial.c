@@ -79,22 +79,34 @@ void D1_Init()
 {
     dialogSequence.text = d1;
     Dialog_Start(&dialogSequence);
+    spritePlayer = SpriteManagerAdd(SpritePlayer, 0, PLAYER_Y);
+}
+
+void D1_Update(){
+    if(spritePlayer->x < PLAYER_X)
+        spritePlayer->x++;
 }
 
 void D1_Exit()
 {
-    spritePlayer = SpriteManagerAdd(SpritePlayer, PLAYER_X, PLAYER_Y);
+    spritePlayer->x = PLAYER_X;
 }
 
 void D2_Init()
 {
     dialogSequence.text = d2;
     Dialog_Start(&dialogSequence);
+    spriteEnemy = SpriteManagerAdd(SpriteEnemy, 128, ENEMY_Y);
+}
+
+void D2_Update(){
+    if(spriteEnemy->x > ENEMY_X)
+        spriteEnemy->x--;
 }
 
 void D2_Exit()
 {
-    spriteEnemy = SpriteManagerAdd(SpriteEnemy, ENEMY_X, ENEMY_Y);
+    spriteEnemy->x = ENEMY_X;
 }
 
 void D3_Init()
@@ -155,8 +167,8 @@ void Tutorial_Finish()
 
 State tutorialStates[TutorialState_Num] = {
     {D0_Init, 0, 0},
-    {D1_Init, 0, D1_Exit},
-    {D2_Init, 0, D2_Exit},
+    {D1_Init, D1_Update, D1_Exit},
+    {D2_Init, D2_Update, D2_Exit},
     {D3_Init, 0, D3_Exit},
     {D4_Init, D4_Update, D4_Exit},
     {D5_Init, 0, D5_Exit},
