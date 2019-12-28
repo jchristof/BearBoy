@@ -33,9 +33,6 @@ void Dialog_Init()
     WY_REG = DIALOG_OPEN_POSITION;
 
     set_win_tiles(0, 0, 3, 3, dialogFrameLeft);
-    PUSH_BANK(2);
-    set_bkg_data(FIRST_DIALOG_TILE_POSITION, DIALOG_TILE_COUNT, ascii.data->data);
-    POP_BANK;
     set_win_tiles(3, 0, 17, 2, textBoxArea);
 }
 

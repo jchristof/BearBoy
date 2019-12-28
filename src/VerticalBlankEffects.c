@@ -2,8 +2,9 @@
 
 #include "main.h"
 
-UINT8 bgOffset = 0;
 #define FRAME_SKIP 32
+
+UINT8 bgOffset;
 
 const UINT8 grassTable[16][4] = {
 	{0,0,0,0}, {1,0,0,0}, {1,1,0,0}, {1,1,1,0},
@@ -17,10 +18,10 @@ UINT8 val1;
 UINT8 val2;
 UINT8 val3;
 
-UINT8 grassBlowDir = 0;
-UINT8 grassBlowAmt = 0;
-
-UINT8 frameSkip = FRAME_SKIP;
+UINT8 grassBlowDir;
+UINT8 grassBlowAmt;
+UINT8 frameSkip;
+UINT8 interruptsEnabled;
 
 void InGameHbl(){
 
@@ -85,11 +86,15 @@ void InGameHblUpdate(){
 	}
 }
 
-UINT8 interrrupts_emabled = 0;
-
 void InGameEnableHbl(){
-    LYC_REG = 7;
-    interrrupts_emabled = 1;
+    LYC_REG = 0x07;
+    bgOffset = 0;
+    grassBlowDir = 0;
+    grassBlowAmt = 0;
+    val0 = val1 = val2 = val3 = 0;
+    frameSkip = FRAME_SKIP;
+
+    interruptsEnabled = 1;
 	disable_interrupts();
 	add_LCD(InGameHbl);
     //add_VBL(InGameHblUpdate);
@@ -99,14 +104,14 @@ void InGameEnableHbl(){
 }
 
 void InGameDisableHbl(){
-    UINT8 wait = 255;
-    if(interrrupts_emabled == 0)
+    //UINT8 wait = 255;
+    if(interruptsEnabled == 0)
         return;
     
-    interrrupts_emabled = 0;
+    interruptsEnabled = 0;
     set_interrupts(VBL_IFLAG | TIM_IFLAG);
 	disable_interrupts();
-    while(wait--)
+    //while(wait--)
     remove_LCD(InGameHbl);
     extra_vbl = 0;
     //remove_VBL(InGameHblUpdate);
