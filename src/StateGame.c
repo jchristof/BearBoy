@@ -1,5 +1,5 @@
 #include "Banks/SetBank2.h"
-
+#include <rand.h>
 #include "..\res\src\tiles.h"
 #include "..\res\src\map.h"
 #include "..\res\src\font.h"
@@ -105,13 +105,6 @@ const UINT8 anim_slash[] = {5, 0, 1, 2, 3, 4};
 
 #define RESTORE_BG \
 	BGP_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0;
-
-// #define OBJ1_ATTACK_COLOR \
-// 	OBP0_REG = (1 << 6) | (1 << 4) | (2 << 2) | 2
-
-// #define OBJ1_RESTORE_COLOR \
-// 	OBP0_REG = (3 << 6) | (2 << 4) | (1 << 2) | 0
-
 
 void UpdateBearHP();
 void UpdateEnemyHP();
@@ -302,7 +295,6 @@ void State_Idle()
 	BLACK_OUT_BG;
 	SpriteManagerLoadTiles(spriteEnemy, enemy_attack_mode.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, bear_attack_mode.data, 0);
-	SHOW_BUTTON(button)
 	enemyMoveSpeed = 1;
 	playerMoveSpeed = 1;
 
@@ -319,6 +311,7 @@ void State_Idle()
 		state = Player_Defend;
 	}
 
+	SHOW_BUTTON(button)
 	time = DELAY_TIME;
 }
 
@@ -391,8 +384,8 @@ void State_Player_Input_Attack()
 	if (KEY_TICKED(J_A))
 	{
 		FLASH_BG;
-		SHOW_BUTTON(button)
 		SpriteManagerLoadTiles(button, win.data, 0);
+		SHOW_BUTTON(button)
 		state = Attack_Success;
 		time = 0x10;
 	}
@@ -439,8 +432,9 @@ void DamageEnemy(UINT8 damage)
 void State_Attack_Failed()
 {
 	DamagePlayer(8);
-	SHOW_BUTTON(button)
+	
 	SpriteManagerLoadTiles(button, lose.data, 0);
+	SHOW_BUTTON(button)
 	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 	time = DELAY_TIME;
 	state = Attack_Failed_Idle;
@@ -521,8 +515,9 @@ void State_Attack_Reset()
 	RESTORE_BG;
 	//OBJ1_RESTORE_COLOR;
 
-	SpriteManagerLoadTiles(button, pressa.data, 0);
 	HIDE_SPRITE(button)
+	//SpriteManagerLoadTiles(button, pressa.data, 0);
+	
 	SpriteManagerLoadTiles(spritePlayer, bear.data, 0);
 	SpriteManagerLoadTiles(spriteEnemy, enemy.data, 0);
 
