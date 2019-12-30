@@ -37,9 +37,11 @@ void Dialog_Init()
 }
 
 void ClearTextArea(){
-    UINT8 i = 0;
+    UINT8 i;
+    PUSH_BANK(2);
     for(i = 0; i < DIALOG_TILE_COUNT; ++i)
-        set_bkg_data(FIRST_DIALOG_TILE_POSITION + i, 1, &(ascii.data->data[0]));
+        set_win_data(FIRST_DIALOG_TILE_POSITION + i, 1,  &(ascii.data->data[0]));
+    POP_BANK;
 }
 
 void Dialog_Reset(){
@@ -87,7 +89,9 @@ DialogState Dialog_Update()
     timer = TYPE_TIME;
 
     PUSH_BANK(2);
-    set_bkg_data(currentTile, 1, &(ascii.data->data[((*currentChar)-32)*16]));
+    
+    set_win_data(currentTile, 1, &(ascii.data->data[((*currentChar)-32)*16]));
+
     POP_BANK;
     currentTile++;
     currentChar++;
