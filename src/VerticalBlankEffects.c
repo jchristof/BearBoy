@@ -99,7 +99,7 @@ void InGameEnableHbl(){
 	add_LCD(InGameHbl);
     //add_VBL(InGameHblUpdate);
     extra_vbl = InGameHblUpdate;
-    set_interrupts(VBL_IFLAG | TIM_IFLAG | LCD_IFLAG);
+    set_interrupts(VBL_IFLAG | LCD_IFLAG);
 	enable_interrupts();
 }
 
@@ -109,7 +109,7 @@ void InGameDisableHbl(){
         return;
     
     interruptsEnabled = 0;
-    set_interrupts(VBL_IFLAG | TIM_IFLAG);
+    set_interrupts(VBL_IFLAG);
 	disable_interrupts();
     //while(wait--)
     remove_LCD(InGameHbl);
@@ -117,5 +117,5 @@ void InGameDisableHbl(){
     //remove_VBL(InGameHblUpdate);
     set_interrupts(VBL_IFLAG | TIM_IFLAG);
 	enable_interrupts();
-
+	SCX_REG = 0;
 }

@@ -162,7 +162,6 @@ void Exit_StateTutorial();
 void Tutorial_Finish()
 {
     Exit_StateTutorial();
-    enable_interrupts();
     SetState(StateGame);
 }
 
@@ -190,9 +189,7 @@ void Start_StateTutorial()
 {
     UINT8 i;
     UINT8 emptyTile[1] = {0};
-
-    disable_interrupts();
-    //InGameEnableHbl();
+   // InGameEnableHbl();
     SHOW_SPRITES;
 
     for (i = 0; i != N_SPRITE_TYPES; ++i)
