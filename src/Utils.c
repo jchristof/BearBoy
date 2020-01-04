@@ -1,7 +1,7 @@
 #include "Utils.h"
 
 const UINT8 blankTile[1] = {0};
-const UINT8 cursorTile[1] = {109};
+const UINT8 cursorTile[1] = {68};
 
 void ClearWindow()
 {

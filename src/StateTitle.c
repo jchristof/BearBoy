@@ -9,7 +9,7 @@
 #include "Utils.h"
 #include "PauseScreen.h"
 
-#include "..\res\src\tiles.h"
+#include "..\res\src\title_tiles.h"
 #include "..\res\src\title.h"
 
 #define NEXT_OPTION currentOption++; if(currentOption == Num){ currentOption = 0;}
@@ -43,7 +43,7 @@ typedef enum {
 
 Option currentOption = Play;
 
-const UVector const cursorPosition[Num] = {{4,15}, {4,16} };
+const UVector const cursorPosition[Num] = {{4,14}, {4,15} };
 const UVector const *cp = 0;
 
 void Start_StateTitle()
@@ -56,12 +56,12 @@ void Start_StateTitle()
     HIDE_WIN;
     
     SpriteManagerLoad(0);
-    SHOW_SPRITES;
+    //SHOW_SPRITES;
     SpriteManagerAdd(SpritePlayer, 64, 64);
 
     InitScroll(&title, 0, 0);
     SHOW_BKG;
-    InitScrollTiles(0, &tiles);
+    InitScrollTiles(0, &title_tiles);
     PlaySong(intro_mod_Data, 3, 1);
     currentOption = Play;
 
