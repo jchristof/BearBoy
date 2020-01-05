@@ -1,6 +1,7 @@
 #include "PauseScreen.h"
 
 #include "..\res\src\pause.h"
+#include "..\res\src\ascii.h"
 
 #include "ZGBMain.h"
 #include "Utils.h"
@@ -8,12 +9,14 @@
 #include "Keys.h"
 #include "GameSound.h"
 #include "Utils.h"
+#include "BankManager.h"
 
 #define NEXT_OPTION currentPauseOption++; if(currentPauseOption == PauseOptionsNum){ currentPauseOption = 0;}
 #define PREV_OPTION if(currentPauseOption == 0){ currentPauseOption = PauseOptionsNum - 1;} else {currentPauseOption--;}
 
-const UINT8 onPhrase[] = { 79, 78, 0};
+const UINT8 onPhrase[] = { 79, 78, 0 };
 const UINT8 offPhrse[] = { 79, 70, 70};
+const UINT8 pauseCursor[1] = {95};
 
 typedef enum {
 	Music,
@@ -22,13 +25,16 @@ typedef enum {
 	PauseOptionsNum
 } PauseOption;
 
-const UVector pauseCursorPosition[PauseOptionsNum] = {{3,3}, {3,4}, {3,6} };
+const UVector pauseCursorPosition[PauseOptionsNum] = {{3,3}, {3,4}, {3,5} };
 PauseOption currentPauseOption = Music;
 
 void InitPauseScreen(){
     InitWindow(0,0,&pause);
+    InitScrollTiles(0, &ascii);
+
     WY_REG = 0;
     SHOW_WIN;
+    SHOW_BKG;
     HIDE_SPRITES;
     currentPauseOption = Music;
 
@@ -41,6 +47,7 @@ void InitPauseScreen(){
         set_win_tiles(13, 4, 3, 1, offPhrse);
     else
         set_win_tiles(13, 4, 3, 1, onPhrase);
+
 }
 
 void PreviousOption(){
@@ -48,7 +55,7 @@ void PreviousOption(){
     set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, blankTile);
     PREV_OPTION;
     cursorPosition =  &pauseCursorPosition[currentPauseOption];
-    set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, cursorTile);
+    set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, pauseCursor);
 }
 
 void NextOption(){
@@ -56,7 +63,7 @@ void NextOption(){
     set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, blankTile);
     NEXT_OPTION;
     cursorPosition =  &pauseCursorPosition[currentPauseOption];
-    set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, cursorTile);
+    set_win_tiles(cursorPosition->x, cursorPosition->y, 1, 1, pauseCursor);
 }
 
 void UpdatePauseScreen(){
@@ -96,5 +103,6 @@ void UpdatePauseScreen(){
 
 void ExitPauseScreen(){
     HIDE_WIN;
+    HIDE_BKG;
     SHOW_SPRITES;
 }

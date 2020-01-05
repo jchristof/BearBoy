@@ -25,13 +25,17 @@ typedef enum{
 
 TitleState titleState = Menu;
 
+void MenuInit();
 void MenuUpdate();
+void MenuExit();
 void PauseInit();
 void PauseUpdate();
 void PauseExit();
 
+void Title_SetState(TitleState newState);
+
 State titleStates[TitleState_Num] = {
-    {0, MenuUpdate, 0},
+    {MenuInit, MenuUpdate, MenuExit},
     {PauseInit, PauseUpdate, PauseExit}
 };
 
@@ -54,20 +58,10 @@ void Start_StateTitle()
 
     SPRITES_8x16;
     HIDE_WIN;
-    
-    SpriteManagerLoad(0);
-    //SHOW_SPRITES;
-    SpriteManagerAdd(SpritePlayer, 64, 64);
 
-    InitScroll(&title, 0, 0);
-    SHOW_BKG;
-    InitScrollTiles(0, &title_tiles);
-    PlaySong(intro_mod_Data, 3, 1);
     currentOption = Play;
-
-    cp = &(cursorPosition[currentOption]);
-    set_bkg_tiles(cp->x, cp->y, 1, 1, cursorTile);
-    titleState = Menu;
+    PlaySong(intro_mod_Data, 3, 1);
+    Title_SetState(Menu);
 }
 
 void TitlePreviousOption(){
@@ -100,6 +94,15 @@ void Update_StateTitle()
     titleStates[titleState].update();
 }
 
+void MenuInit(){
+    InitScroll(&title, 0, 0);
+    InitScrollTiles(0, &title_tiles);
+
+    SHOW_BKG;
+    cp = &(cursorPosition[currentOption]);
+    set_bkg_tiles(cp->x, cp->y, 1, 1, cursorTile);
+}
+
 void MenuUpdate(){
     if(KEY_RELEASED(J_UP)){
         TitlePreviousOption();
@@ -110,7 +113,6 @@ void MenuUpdate(){
     else if (KEY_RELEASED(J_A)){
         if(currentOption == Play){
             SetState(StateTutorial);
-            //SetState(StateGame);
             initrand(DIV_REG);
             CLEAR_KEYS();
         }
@@ -118,6 +120,11 @@ void MenuUpdate(){
             Title_SetState(Pause);
         }
     }
+}
+
+void MenuExit(){
+    HIDE_WIN;
+    HIDE_BKG;
 }
 
 void PauseInit(){
