@@ -18,6 +18,8 @@ const UINT8 onPhrase[] = { 79, 78, 0 };
 const UINT8 offPhrse[] = { 79, 70, 70};
 const UINT8 pauseCursor[1] = {95};
 
+void (*pauseOnQuit)(void);
+
 typedef enum {
 	Music,
 	SoundFx,
@@ -32,6 +34,7 @@ void InitPauseScreen(){
     InitWindow(0,0,&pause);
     InitScrollTiles(0, &ascii);
 
+    wait_vbl_done();
     WY_REG = 0;
     SHOW_WIN;
     SHOW_BKG;
@@ -68,13 +71,13 @@ void NextOption(){
 
 void UpdatePauseScreen(){
     
-    if(KEY_RELEASED(J_UP)){
+    if(KEY_TICKED(J_UP)){
         PreviousOption();
     }
-    else if(KEY_RELEASED(J_DOWN)){
+    else if(KEY_TICKED(J_DOWN)){
         NextOption();
     }
-    else if(KEY_RELEASED(J_A)){
+    else if(KEY_TICKED(J_A)){
         if(currentPauseOption == Music){
             if(IsMusicMuted()){
                 UnMuteMusic();
@@ -96,7 +99,12 @@ void UpdatePauseScreen(){
             }
         }
         else if(currentPauseOption == Exit){
-            SetState(StateTitle);
+            if(pauseOnQuit){
+                pauseOnQuit();
+                pauseOnQuit = NULL;
+            }
+            else
+                SetState(StateTitle);
         }
     }
 }
@@ -105,4 +113,5 @@ void ExitPauseScreen(){
     HIDE_WIN;
     HIDE_BKG;
     SHOW_SPRITES;
+    wait_vbl_done();
 }

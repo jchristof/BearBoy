@@ -189,7 +189,7 @@ void Start_StateTutorial()
 {
     UINT8 i;
     UINT8 emptyTile[1] = {0};
-   // InGameEnableHbl();
+    InGameEnableHbl();
     SHOW_SPRITES;
 
     for (i = 0; i != N_SPRITE_TYPES; ++i)
@@ -244,5 +244,5 @@ void Update_StateTutorial()
 
 void Exit_StateTutorial()
 {
-    //InGameDisableHbl();
+    InGameDisableHbl();
 }

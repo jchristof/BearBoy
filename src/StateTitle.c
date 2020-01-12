@@ -104,17 +104,16 @@ void MenuInit(){
 }
 
 void MenuUpdate(){
-    if(KEY_RELEASED(J_UP)){
+    if(KEY_TICKED(J_UP)){
         TitlePreviousOption();
     }
-    else if(KEY_RELEASED(J_DOWN)){
+    else if(KEY_TICKED(J_DOWN)){
         TitleNextOption();
     }
-    else if (KEY_RELEASED(J_A)){
+    else if (KEY_TICKED(J_A)){
         if(currentOption == Play){
             SetState(StateTutorial);
             initrand(DIV_REG);
-            CLEAR_KEYS();
         }
         else{
             Title_SetState(Pause);
@@ -132,9 +131,8 @@ void PauseInit(){
 }
 void PauseUpdate(){
     UpdatePauseScreen();
-    if(KEY_RELEASED(J_B)){
+    if(KEY_TICKED(J_B)){
         Title_SetState(Menu);
-        CLEAR_KEYS();
     }
 }
 void PauseExit(){

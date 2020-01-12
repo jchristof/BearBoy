@@ -111,6 +111,8 @@ void UpdateEnemyHP();
 void DamageEnemy(UINT8 damage);
 void ShowRound();
 
+void Exit_GameState();
+
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
 
@@ -120,10 +122,10 @@ UINT8 enemyHP = 56;
 //nine bg tiles representing the healthbar
 const UINT8 healthBarTiles[9] = {23, 24, 25, 26, 27, 28, 29, 30, 31};
 const UINT8 trophyTile[1] = {34};
-const UINT8 roundPhrase[] = {0x52, 0x4f, 0x55, 0x4e, 0x44};
-const UINT8 numberTiles[] = {0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x61, 0x62, 0x63, 0x64};
-const UINT8 readyPhrase[] = {0x52, 0x45, 0x41, 0x44, 0x59, 0x6c};
-const UINT8 fightPhrase[] = {0x46, 0x49, 0x47, 0x48, 0x54, 0x65};
+const UINT8 roundPhrase[] = {65, 66, 67, 68, 69};
+const UINT8 numberTiles[] = {80, 81, 82, 83, 84, 85, 86, 87, 88, 89};
+const UINT8 readyPhrase[] = {65, 70, 71, 69, 72, 79};
+const UINT8 fightPhrase[] = {73, 74, 75, 76, 77, 78};
 
 void State_Paused() {
 	UpdatePauseScreen();
@@ -160,9 +162,8 @@ void Start_StateGame()
 	HIDE_SPRITE(button);
 
 	SetBkgTiles(&map);
-	SHOW_BKG;
-
 	InitScrollTiles(0, &tiles);
+	SHOW_BKG;
 
 	for (i = 0; i < consecutiveWins; ++i)
 	{
@@ -176,6 +177,8 @@ void Start_StateGame()
 
 	state = Init;
 	lastState = Init;
+
+	pauseOnQuit = Exit_GameState;
 }
 
 //show the two digit round count
@@ -202,12 +205,15 @@ void ShowRound(){
 unsigned char lastPalette = 0;
 void Update_StateGame()
 {
-	unsigned char map[1] = {1};
+	//unsigned char map[1] = {1};
 
 	if (KEY_TICKED(J_START))
 	{
 		if (state != Paused)
 		{
+			HIDE_WIN;
+    		HIDE_BKG;
+			wait_vbl_done();
 			InitPauseScreen();
 			lastState = state;
 			state = Paused;
@@ -216,6 +222,9 @@ void Update_StateGame()
 		}
 		else
 		{
+			ExitPauseScreen();
+			SetBkgTiles(&map);
+			InitScrollTiles(0, &tiles);
 			state = lastState;
 			SHOW_BKG;
 			HIDE_WIN;
@@ -282,7 +291,7 @@ void State_Idle()
 	}
 	if (time--)
 	{
-		if (KEY_PRESSED(J_A) || KEY_PRESSED(J_B))
+		if (KEY_TICKED(J_A) || KEY_TICKED(J_B))
 		{
 			time = DELAY_TIME;
 			state = Attack_Failed;
@@ -318,10 +327,17 @@ void State_Idle()
 void State_Player_Defend()
 {
 	++enemyMoveSpeed;
+	
 	if (spriteEnemy->x > spritePlayer->x)
 	{
-		if (KEY_TICKED(J_B))
+		if (KEY_TICKED(J_B)){
 			state = Player_Defend_Success_Init;
+			time = DELAY_TIME;
+			FLASH_BG;
+		}
+		else if (KEY_TICKED(J_A))
+			state = Player_Defend_Fail;
+		
 
 		spriteEnemy->x -= (enemyMoveSpeed >> moveSpeedThrottle);
 	}
@@ -331,9 +347,14 @@ void State_Player_Defend()
 
 void State_Player_Defend_Success_Init()
 {
+	while(time--)
+		return;
+
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
-	HIDE_SPRITE(button);
+	BLACK_OUT_BG;
+	SpriteManagerLoadTiles(button, win.data, 0);
+	SHOW_BUTTON(button)
 	DamageEnemy(8);
 
 	time = DELAY_TIME;
@@ -344,6 +365,7 @@ void State_Player_Defend_Success()
 {
 	if (time-- == 0)
 	{
+		HIDE_SPRITE(button);
 		state = Attack_Reset;
 	}
 	if (time % 8 == 0)
@@ -389,11 +411,7 @@ void State_Player_Input_Attack()
 		state = Attack_Success;
 		time = 0x10;
 	}
-	else
-	{
-		if (spritePlayer->x < 112)
-			return;
-
+	else if (spritePlayer->x >= 112 || KEY_TICKED(J_B)){
 		SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
 		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);

@@ -89,7 +89,7 @@ DialogState Dialog_Update()
     timer = TYPE_TIME;
 
     PUSH_BANK(2);
-    
+    wait_vbl_done();
     set_win_data(currentTile, 1, &(ascii.data->data[((*currentChar)-32)*16]));
 
     POP_BANK;
