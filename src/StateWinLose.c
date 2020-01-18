@@ -3,6 +3,8 @@
 #include "Keys.h"
 #include "Scroll.h"
 #include "SpriteManager.h"
+#include "Sound.h"
+#include "GameSound.h"
 
 #include "..\res\src\ascii.h"
 #include "..\res\src\winlose.h"
@@ -16,6 +18,8 @@ struct Sprite *winLoseGraphic = 0;
 const char youWinMessage[] = "You Win";
 const char youDiedMessage[] = "You Died";
 char charToDraw = ' ';
+extern UINT8* lose_mod_Data[];
+extern UINT8* win_mod_Data[];
 void Start_StateWinLose()
 {
     UINT8 i;
@@ -24,6 +28,7 @@ void Start_StateWinLose()
 
     winLoseGraphic = SpriteManagerAdd(SpriteWinLose, 60, 60);
     if(!lastGameWasWin){
+        PlaySong(lose_mod_Data, 3, 0);
         SpriteManagerLoadTiles(winLoseGraphic, youdied.data, 0);
 
         for(i = 0; i < YOU_DIED_MSG_LEN; ++i){
@@ -32,6 +37,7 @@ void Start_StateWinLose()
         }
     }
     else{
+        PlaySong(win_mod_Data, 3, 0);
         for(i = 0; i < YOU_WIN_MSG_LEN; ++i){
             charToDraw = youWinMessage[i] - 32;
             set_bkg_tiles(6 + i, 2, 1, 1, &charToDraw);

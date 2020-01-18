@@ -111,7 +111,7 @@ void UpdateEnemyHP();
 void DamageEnemy(UINT8 damage);
 void ShowRound();
 
-void Exit_GameState();
+void QuitFromPause();
 
 UINT8 playerMoveSpeed = 1;
 UINT8 enemyMoveSpeed = 1;
@@ -178,7 +178,7 @@ void Start_StateGame()
 	state = Init;
 	lastState = Init;
 
-	pauseOnQuit = Exit_GameState;
+	pauseOnQuit = QuitFromPause;
 }
 
 //show the two digit round count
@@ -205,8 +205,6 @@ void ShowRound(){
 unsigned char lastPalette = 0;
 void Update_StateGame()
 {
-	//unsigned char map[1] = {1};
-
 	if (KEY_TICKED(J_START))
 	{
 		if (state != Paused)
@@ -214,6 +212,7 @@ void Update_StateGame()
 			HIDE_WIN;
     		HIDE_BKG;
 			wait_vbl_done();
+			disable_interrupts();
 			InitPauseScreen();
 			lastState = state;
 			state = Paused;
@@ -223,6 +222,8 @@ void Update_StateGame()
 		else
 		{
 			ExitPauseScreen();
+			wait_vbl_done();
+			
 			SetBkgTiles(&map);
 			InitScrollTiles(0, &tiles);
 			state = lastState;
@@ -230,6 +231,7 @@ void Update_StateGame()
 			HIDE_WIN;
 			SHOW_SPRITES;
 			BGP_REG = lastPalette;
+			enable_interrupts();
 		}
 	}
 	else
@@ -238,6 +240,12 @@ void Update_StateGame()
 
 void Exit_GameState(){
 	InGameDisableHbl();
+}
+
+void QuitFromPause(){
+	lastGameWasWin = 0;
+	consecutiveWins = 0;
+	Exit_GameState();
 }
 
 #define DELAY_TIME 0x20
