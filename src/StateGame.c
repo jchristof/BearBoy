@@ -212,7 +212,6 @@ void Update_StateGame()
 			HIDE_WIN;
     		HIDE_BKG;
 			wait_vbl_done();
-			disable_interrupts();
 			InitPauseScreen();
 			lastState = state;
 			state = Paused;
@@ -222,8 +221,6 @@ void Update_StateGame()
 		else
 		{
 			ExitPauseScreen();
-			wait_vbl_done();
-			
 			SetBkgTiles(&map);
 			InitScrollTiles(0, &tiles);
 			state = lastState;
@@ -231,7 +228,8 @@ void Update_StateGame()
 			HIDE_WIN;
 			SHOW_SPRITES;
 			BGP_REG = lastPalette;
-			enable_interrupts();
+			UpdateBearHP();
+			UpdateEnemyHP();
 		}
 	}
 	else
