@@ -224,6 +224,7 @@ void Update_StateGame()
 		else
 		{
 			ExitPauseScreen();
+			wait_vbl_done();
 			SetBkgTiles(&map);
 			InitScrollTiles(0, &tiles);
 			state = lastState;
@@ -231,6 +232,7 @@ void Update_StateGame()
 			HIDE_WIN;
 			SHOW_SPRITES;
 			BGP_REG = lastPalette;
+			wait_vbl_done();
 			UpdateBearHP();
 			UpdateEnemyHP();
 		}
