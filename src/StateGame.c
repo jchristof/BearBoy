@@ -434,15 +434,11 @@ void State_Player_Input_Attack()
 		state = Attack_Success;
 		time = 0x10;
 	}
-	else if (spritePlayer->x >= 112){
+	else if (spritePlayer->x >= 112 || KEY_TICKED(J_B)){
 		//SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 		//SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
 		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 		state = Attack_Failed2;
-	}
-	else if(KEY_TICKED(J_B)){
-		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
-		state = Attack_Failed;
 	}
 }
 
@@ -476,7 +472,7 @@ void DamageEnemy(UINT8 damage)
 
 void State_Attack_Failed2()
 {
-	if(spritePlayer->x < spriteEnemy->x - 32){
+	if(spritePlayer->x < spriteEnemy->x - 24){
 		++playerMoveSpeed;
 		spritePlayer->x += (playerMoveSpeed >> moveSpeedThrottle);
 		return;
@@ -489,7 +485,6 @@ void State_Attack_Failed2()
 	
 	SpriteManagerLoadTiles(button, lose.data, 0);
 	SHOW_BUTTON(button)
-	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
 	time = DELAY_TIME;
 	state = Attack_Failed_Idle;
 }
