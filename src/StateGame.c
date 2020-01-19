@@ -41,6 +41,7 @@ void State_Player_Defend_Success();
 void State_Player_Defend_Fail();
 void State_Attack_Success();
 void State_Attack_Failed();
+void State_Attack_Failed2();
 void State_Attack_Failed_Idle();
 void State_Attack_Pre();
 void State_Attack();
@@ -61,6 +62,7 @@ typedef enum
 	Player_Defend_Fail,
 	Attack_Success,
 	Attack_Failed,
+	Attack_Failed2,
 	Attack_Failed_Idle,
 	Attack_Pre,
 	Attack,
@@ -85,6 +87,7 @@ void (*fun_ptr_arr[State_Num])(void) = {
 	State_Player_Defend_Fail,
 	State_Attack_Success,
 	State_Attack_Failed,
+	State_Attack_Failed2,
 	State_Attack_Failed_Idle,
 	State_Attack_Pre,
 	State_Attack,
@@ -340,6 +343,7 @@ void State_Player_Defend()
 			state = Player_Defend_Success_Init;
 			time = DELAY_TIME;
 			FLASH_BG;
+			SpriteManagerLoadTiles(button, win.data, 0);
 		}
 		else if (KEY_TICKED(J_A))
 			state = Player_Defend_Fail;
@@ -353,13 +357,24 @@ void State_Player_Defend()
 
 void State_Player_Defend_Success_Init()
 {
+	if (spriteEnemy->x > spritePlayer->x + 32){
+		++enemyMoveSpeed;
+		spriteEnemy->x -= (enemyMoveSpeed >> moveSpeedThrottle);
+		return;
+	}
+	else
+	{
+		spriteEnemy->x  =  spritePlayer->x + 32;
+	}
+	
+
 	while(time--)
 		return;
 
 	SpriteManagerLoadTiles(spriteEnemy, enemy_fail.data, 0);
 	SpriteManagerLoadTiles(spritePlayer, jump.data, 0);
 	BLACK_OUT_BG;
-	SpriteManagerLoadTiles(button, win.data, 0);
+	
 	SHOW_BUTTON(button)
 	DamageEnemy(8);
 
@@ -417,9 +432,13 @@ void State_Player_Input_Attack()
 		state = Attack_Success;
 		time = 0x10;
 	}
-	else if (spritePlayer->x >= 112 || KEY_TICKED(J_B)){
-		SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
-		SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
+	else if (spritePlayer->x >= 112){
+		//SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
+		//SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
+		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
+		state = Attack_Failed2;
+	}
+	else if(KEY_TICKED(J_B)){
 		PlayFx(CHANNEL_1, 4, 0x4f, 0xc7, 0xf3, 0x73, 0x86);
 		state = Attack_Failed;
 	}
@@ -451,6 +470,26 @@ void DamageEnemy(UINT8 damage)
 		enemyHP = 0;
 
 	UpdateEnemyHP();
+}
+
+void State_Attack_Failed2()
+{
+	if(spritePlayer->x < spriteEnemy->x - 32){
+		++playerMoveSpeed;
+		spritePlayer->x += (playerMoveSpeed >> moveSpeedThrottle);
+		return;
+	}
+
+	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
+	SpriteManagerLoadTiles(spriteEnemy, enemy_attack.data, 0);
+
+	DamagePlayer(8);
+	
+	SpriteManagerLoadTiles(button, lose.data, 0);
+	SHOW_BUTTON(button)
+	SpriteManagerLoadTiles(spritePlayer, bear_fail.data, 0);
+	time = DELAY_TIME;
+	state = Attack_Failed_Idle;
 }
 
 void State_Attack_Failed()
